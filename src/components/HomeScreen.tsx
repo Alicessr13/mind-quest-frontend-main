@@ -6,6 +6,8 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../App"; // ajuste conforme seu projeto
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TimerManager } from "../utils/timerManager";
+import { AuthUtils } from "../utils/auth";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -42,11 +44,65 @@ export default function HomeScreen() {
     const [todayPlans, setTodayPlans] = useState<DailyPlan[]>([]);
     const [loading, setLoading] = useState(true);
     const [inProgress, setInProgress] = useState<DailyPlan[]>([]);
+    const [activeTimerInfo, setActiveTimerInfo] = useState<{
+        subject: string;
+        remainingTime: string;
+    } | null>(null);
+
+    // Função para verificar se há timer ativo
+    const checkActiveTimer = useCallback(async () => {
+        try {
+            const { hasActiveTimer, timerData } = await TimerManager.checkForActiveTimer();
+            
+            if (hasActiveTimer && timerData) {
+                // Calcula o tempo restante para exibir na interface
+                const currentTime = Date.now();
+                const elapsedSeconds = Math.floor((currentTime - timerData.startTime) / 1000);
+                const remainingSeconds = Math.max(0, timerData.initialSeconds - elapsedSeconds);
+                
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                setActiveTimerInfo({
+                    subject: timerData.dayData.content.subject,
+                    remainingTime: timeString
+                });
+                
+                console.log('Timer ativo encontrado:', {
+                    subject: timerData.dayData.content.subject,
+                    remainingTime: timeString
+                });
+            } else {
+                setActiveTimerInfo(null);
+            }
+        } catch (error) {
+            console.error("Erro ao verificar timer ativo:", error);
+            setActiveTimerInfo(null);
+        }
+    }, []);
+
+    // Função para navegar para o timer ativo
+    const goToActiveTimer = async () => {
+        try {
+            const { hasActiveTimer, timerData } = await TimerManager.checkForActiveTimer();
+            
+            if (hasActiveTimer && timerData) {
+                navigation.navigate("DailyStudyPlan", { day: timerData.dayData });
+            } else {
+                Alert.alert("Aviso", "Timer não encontrado ou já finalizado.");
+                setActiveTimerInfo(null);
+            }
+        } catch (error) {
+            console.error("Erro ao navegar para timer ativo:", error);
+            Alert.alert("Erro", "Não foi possível acessar o timer ativo.");
+        }
+    };
 
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const token = await AsyncStorage.getItem("token");
+            const token = await AuthUtils.getToken();
 
             const [userRes, plansRes, dailyRes] = await Promise.all([
                 axios.get("http://192.168.0.17:3333/user", {
@@ -76,8 +132,25 @@ export default function HomeScreen() {
     useFocusEffect(
         useCallback(() => {
             fetchData();
-        }, [fetchData])
+            checkActiveTimer();
+        }, [fetchData, checkActiveTimer])
     );
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout | null = null;
+        
+        if (activeTimerInfo) {
+            interval = setInterval(() => {
+                checkActiveTimer();
+            }, 1000);
+        }
+        
+        return () => {
+            if (interval) {
+                clearInterval(interval);
+            }
+        };
+    }, [activeTimerInfo, checkActiveTimer]);
 
     const handleLogout = () => {
         Alert.alert(
@@ -152,6 +225,24 @@ export default function HomeScreen() {
                         <Text style={styles.logoutButtonText}>Sair</Text>
                     </TouchableOpacity>
                 </View>
+            )}
+
+            {/* Banner de timer ativo */}
+            {activeTimerInfo && (
+                <TouchableOpacity
+                    style={styles.activeTimerBanner}
+                    onPress={goToActiveTimer}
+                >
+                    <View style={styles.timerIconContainer}>
+                        <Text style={styles.timerIcon}>⏰</Text>
+                    </View>
+                    <View style={styles.timerTextContainer}>
+                        <Text style={styles.timerActiveText}>Timer ativo</Text>
+                        <Text style={styles.timerSubject}>{activeTimerInfo.subject}</Text>
+                        <Text style={styles.timerTime}>{activeTimerInfo.remainingTime}</Text>
+                    </View>
+                    <Text style={styles.timerArrow}>→</Text>
+                </TouchableOpacity>
             )}
 
             {/* Atrasados */}
@@ -278,4 +369,51 @@ const styles = StyleSheet.create({
     },
     buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
     empty: { color: "gray", fontStyle: "italic" },
+    activeTimerBanner: {
+        backgroundColor: "#3b82f6",
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    timerIconContainer: {
+        marginRight: 12,
+    },
+    timerIcon: {
+        fontSize: 24,
+    },
+    timerTextContainer: {
+        flex: 1,
+    },
+    timerActiveText: {
+        color: "#fff",
+        fontSize: 12,
+        fontWeight: "600",
+        opacity: 0.9,
+        marginBottom: 2,
+    },
+    timerSubject: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
+        marginBottom: 2,
+    },
+    timerTime: {
+        color: "#fff",
+        fontSize: 18,
+        fontWeight: "700",
+        fontFamily: "monospace", // Para uma fonte monoespaçada como o tempo
+    },
+    timerArrow: {
+        color: "#fff",
+        fontSize: 20,
+        fontWeight: "bold",
+        opacity: 0.7,
+    },
 });

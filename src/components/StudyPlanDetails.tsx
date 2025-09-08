@@ -3,9 +3,8 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity }
 import axios from "axios";
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App"; // ajuste para o seu projeto
-import * as SecureStore from "expo-secure-store";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { AuthUtils } from "../utils/auth";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StudyPlanDetails">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "StudyPlanDetails">;
@@ -46,7 +45,7 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
     useEffect(() => {
         const fetchPlan = async () => {
             try {
-                const token = await AsyncStorage.getItem("token");
+                const token = await AuthUtils.getToken();
 
                 const res = await axios.get(`http://192.168.0.17:3333/study-plan/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },

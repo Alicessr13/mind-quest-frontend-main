@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { AuthUtils } from "./src/utils/auth";
 import LoginScreen from "./src/components/LoginScreen";
 import SignUpScreen from "./src/components/RegisterScreen";
 import HomeScreen from "./src/components/HomeScreen";
@@ -29,15 +31,48 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Tela de loading enquanto verifica o token
+function LoadingScreen() {
+    return (
+        <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3b82f6" />
+        </View>
+    );
+}
+
 export default function App() {
-    const [appIsReady, setAppIsReady] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    // Função para verificar se o usuário já está logado
+    const checkAuthState = async () => {
+        try {
+            // Usa o AuthUtils que já tem toda a lógica de validação
+            const isAuthenticated = await AuthUtils.checkAuthState();
+            setIsLoggedIn(isAuthenticated);
+        } catch (error) {
+            console.error("Erro ao verificar estado de autenticação:", error);
+            setIsLoggedIn(false);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        checkAuthState();
+    }, []);
+
+    // Mostra tela de loading enquanto verifica a autenticação
+    if (isLoading) {
+        return <LoadingScreen />;
+    }
 
     return (
         <NavigationContainer>
             <Stack.Navigator 
-                initialRouteName="Login"
+                initialRouteName={isLoggedIn ? "Home" : "Login"}
                 screenOptions={{
-                    headerShown: false // Remove o header se não quiser
+                    headerShown: false
                 }}
             >
                 <Stack.Screen name="Login" component={LoginScreen} />
@@ -50,3 +85,12 @@ export default function App() {
         </NavigationContainer>
     );
 }
+
+const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f5f5f5",
+    },
+});

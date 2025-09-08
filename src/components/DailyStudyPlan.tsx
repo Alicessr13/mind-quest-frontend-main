@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, AppState } from "react
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppStateStatus } from 'react-native';
+import { AuthUtils } from "../utils/auth";
+import { TimerManager, ActiveTimer } from "../utils/timerManager";
 
 interface DailyPlan {
     study_plan_day_id: string;
@@ -51,7 +53,7 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
 
     // Inicialização do timer
     useEffect(() => {
-        checkExistingTimer();
+        checkForConflictingTimer();
     }, []);
 
     // Monitor do AppState para detectar quando o app volta ao foco
@@ -67,6 +69,46 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         const subscription = AppState.addEventListener('change', handleAppStateChange);
         return () => subscription?.remove();
     }, []);
+
+    // Verifica se há conflito com outro timer antes de inicializar
+    const checkForConflictingTimer = async () => {
+        try {
+            const { hasConflict, conflictingTimer } = await TimerManager.hasConflictingTimer(day.study_plan_day_id);
+            
+            if (hasConflict && conflictingTimer) {
+                Alert.alert(
+                    "Timer ativo em outro plano",
+                    `Há um timer rodando para "${conflictingTimer.dayData.content.subject}". Você quer parar o timer anterior e iniciar um novo?`,
+                    [
+                        {
+                            text: "Ir para o timer ativo",
+                            onPress: () => {
+                                navigation.replace("DailyStudyPlan", { day: conflictingTimer.dayData });
+                            }
+                        },
+                        {
+                            text: "Parar o anterior",
+                            style: "destructive",
+                            onPress: async () => {
+                                await TimerManager.clearActiveTimer();
+                                await checkExistingTimer();
+                            }
+                        },
+                        {
+                            text: "Cancelar",
+                            style: "cancel",
+                            onPress: () => navigation.goBack()
+                        }
+                    ]
+                );
+            } else {
+                await checkExistingTimer();
+            }
+        } catch (error) {
+            console.error("Erro ao verificar conflito:", error);
+            await checkExistingTimer();
+        }
+    };
 
     // Verifica se existe um timer rodando em background
     const checkExistingTimer = async () => {
@@ -139,17 +181,49 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
     const startTimer = async () => {
         if (isRunning) return;
         
+        // Verifica novamente se há conflito antes de iniciar
+        const { hasConflict, conflictingTimer } = await TimerManager.hasConflictingTimer(day.study_plan_day_id);
+        
+        if (hasConflict && conflictingTimer) {
+            Alert.alert(
+                "Conflito de Timer",
+                `Há um timer ativo para "${conflictingTimer.dayData.content.subject}". Pare o outro timer primeiro.`,
+                [
+                    {
+                        text: "Ir para o timer ativo",
+                        onPress: () => {
+                            navigation.replace("DailyStudyPlan", { day: conflictingTimer.dayData });
+                        }
+                    },
+                    { text: "OK", style: "cancel" }
+                ]
+            );
+            return;
+        }
+        
         try {
             const startTime = Date.now();
             const currentInitialSeconds = remainingSeconds;
             
-            // Salva o estado do timer no AsyncStorage
+            // Salva o estado do timer no AsyncStorage local
             await AsyncStorage.setItem(timerKey, JSON.stringify({
                 startTime,
                 initialSeconds: currentInitialSeconds,
                 isActive: true,
                 dayId: day.study_plan_day_id
             }));
+
+            // Salva no TimerManager global
+            const activeTimer: ActiveTimer = {
+                startTime,
+                initialSeconds: currentInitialSeconds,
+                isActive: true,
+                dayId: day.study_plan_day_id,
+                timerKey,
+                dayData: day
+            };
+            
+            await TimerManager.setActiveTimer(activeTimer);
             
             setIsRunning(true);
             setInitialSeconds(currentInitialSeconds);
@@ -170,13 +244,16 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
             if (timerRef.current) clearInterval(timerRef.current);
             setIsRunning(false);
             
-            // Para o timer no AsyncStorage
+            // Para o timer no AsyncStorage local
             await AsyncStorage.setItem(timerKey, JSON.stringify({
                 startTime: null,
                 initialSeconds: 0,
                 isActive: false,
                 dayId: day.study_plan_day_id
             }));
+
+            // Remove do TimerManager global
+            await TimerManager.clearActiveTimer();
             
             // Calcula quanto foi estudado
             const secondsStudiedInThisSession = initialSeconds - remainingSeconds;
@@ -203,8 +280,11 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
 
     const handleTimerComplete = async (totalInitialSeconds: number) => {
         try {
-            // Remove o timer do AsyncStorage
+            // Remove o timer do AsyncStorage local
             await AsyncStorage.removeItem(timerKey);
+            
+            // Remove do TimerManager global
+            await TimerManager.clearActiveTimer();
             
             setIsRunning(false);
             
@@ -218,7 +298,7 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
 
     const finishStudy = async (minutesStudiedInThisSession: number) => {
         try {
-            const token = await AsyncStorage.getItem("token");
+            const token = await AuthUtils.getToken();
 
             console.log('Enviando para API:', {
                 minutesStudiedInThisSession,
@@ -281,7 +361,21 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
             <TouchableOpacity
                 style={styles.buttonBack}
                 onPress={() => {
-                    navigation.goBack();
+                    if (isRunning) {
+                        Alert.alert(
+                            "Timer ativo",
+                            "Há um timer rodando. Se você sair, o timer continuará em background.",
+                            [
+                                { text: "Continuar", style: "cancel" },
+                                { 
+                                    text: "Sair mesmo assim", 
+                                    onPress: () => navigation.goBack() 
+                                }
+                            ]
+                        );
+                    } else {
+                        navigation.goBack();
+                    }
                 }}>
                 <Text style={styles.buttonText}>Voltar</Text>
             </TouchableOpacity>
