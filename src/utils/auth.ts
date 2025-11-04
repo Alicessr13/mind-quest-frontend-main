@@ -1,8 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-
-const API_BASE_URL = "http://192.168.0.17:3333";
+import { api } from "../api";
 
 export class AuthUtils {
     // Função para salvar token de forma segura
@@ -43,7 +42,7 @@ export class AuthUtils {
     // Função para verificar se o token é válido
     static async validateToken(token: string): Promise<boolean> {
         try {
-            const response = await axios.get(`${API_BASE_URL}/user`, {
+            const response = await api.get("/user", {
                 headers: { Authorization: `Bearer ${token}` },
                 timeout: 5000, // 5 segundos de timeout
             });

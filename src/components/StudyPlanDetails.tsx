@@ -5,6 +5,7 @@ import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-naviga
 import { RootStackParamList } from "../../App"; // ajuste para o seu projeto
 import { useNavigation } from "@react-navigation/native";
 import { AuthUtils } from "../utils/auth";
+import { api } from "../api";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StudyPlanDetails">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "StudyPlanDetails">;
@@ -16,7 +17,7 @@ interface Content {
     status: string;
     allocated_minutes: number;
     studied_minutes: number;
-    StudyPlanDay: {
+    study_plan_day: {
         study_plan_day_id: string;
         date: string;
         status: string;
@@ -47,7 +48,7 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
             try {
                 const token = await AuthUtils.getToken();
 
-                const res = await axios.get(`http://192.168.0.17:3333/study-plan/${id}`, {
+                const res = await api.get(`/study-plan/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -120,7 +121,7 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
                         {/* Dias de estudo (expansível) */}
                         {expandedContent === item.content_id.toString() && (
                             <View style={styles.subList}>
-                                {item.StudyPlanDay.map((day) => (
+                                {item.study_plan_day.map((day) => (
                                     <View key={day.study_plan_day_id} style={styles.subItem}>
                                         <Text>
                                             {new Date(day.date).toLocaleDateString()} - {day.status}

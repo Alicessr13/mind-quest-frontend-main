@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../App";
 import { AuthUtils } from "../utils/auth"; // Importe os utilitários
+import { api } from "../api";
 
 type LoginScreenProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
@@ -31,7 +32,7 @@ export default function LoginScreen() {
         setLoading(true);
 
         try {
-            const response = await axios.post("http://192.168.0.17:3333/sign-in", {
+            const response = await api.post("/sign-in", {
                 email,
                 password
             });

@@ -4,6 +4,7 @@ import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
 import { useNavigation } from "@react-navigation/native";
+import { api } from "../api";
 
 type SignUpScreenProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
@@ -24,10 +25,11 @@ export default function SignUpScreen() {
     setLoading(true);
 
     try {
-      await axios.post("http://192.168.0.17:3333/sign-up", { name, email, password });
+      await api.post("/sign-up", { name, email, password });
       Alert.alert("Sucesso", "Cadastro realizado!");
       navigation.navigate("Login");
     } catch (error: any) {
+      console.error("Erro no cadastro:", error);
       Alert.alert("Erro", error.response?.data?.message || "Não foi possível cadastrar o usuário.");
     } finally {
       setLoading(false);

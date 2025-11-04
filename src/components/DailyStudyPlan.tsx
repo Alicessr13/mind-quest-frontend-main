@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppStateStatus } from 'react-native';
 import { AuthUtils } from "../utils/auth";
 import { TimerManager, ActiveTimer } from "../utils/timerManager";
+import { api } from "../api";
 
 interface DailyPlan {
     study_plan_day_id: string;
@@ -305,8 +306,8 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                 dayId: day.study_plan_day_id
             });
 
-            await axios.patch(
-                `http://192.168.0.17:3333/study-plan-day/${day.study_plan_day_id}/progress`,
+            await api.patch(
+                `/study-plan-day/${day.study_plan_day_id}/progress`,
                 { studied_minutes: minutesStudiedInThisSession },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

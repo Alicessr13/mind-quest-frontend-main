@@ -9,6 +9,8 @@ import HomeScreen from "./src/components/HomeScreen";
 import StudyPlanDetailsScreen from "./src/components/StudyPlanDetails";
 import CreateStudyPlanScreen from "./src/components/CreateStudyPlan";
 import DailyStudyScreen from "./src/components/DailyStudyPlan";
+import UserProfile from "./src/components/UserProfile";
+import ShopScreen from "./src/components/ShopScreen";
 
 interface DailyPlan {
     study_plan_day_id: string;
@@ -27,6 +29,8 @@ export type RootStackParamList = {
     StudyPlanDetails: { id: string };
     CreateStudyPlan: undefined;
     DailyStudyPlan: { day: DailyPlan };
+    Profile: undefined;
+    ShopScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -81,6 +85,8 @@ export default function App() {
                 <Stack.Screen name="StudyPlanDetails" component={StudyPlanDetailsScreen} />
                 <Stack.Screen name="CreateStudyPlan" component={CreateStudyPlanScreen} />
                 <Stack.Screen name="DailyStudyPlan" component={DailyStudyScreen} />
+                <Stack.Screen name="Profile" component={UserProfile} />
+                <Stack.Screen name="ShopScreen" component={ShopScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

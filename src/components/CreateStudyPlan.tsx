@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../App";
 import axios from "axios";
 import { AuthUtils } from "../utils/auth";
+import { api } from "../api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "CreateStudyPlan">;
 
@@ -61,8 +62,8 @@ export default function CreateStudyPlanScreen() {
 
         try {
             const token = await AuthUtils.getToken();
-            const item = await axios.post(
-                "http://192.168.0.17:3333/study-plan",
+            const item = await api.post(
+                "/study-plan",
                 {
                     subject,
                     start_date: startDate.toISOString(),

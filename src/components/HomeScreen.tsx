@@ -8,6 +8,7 @@ import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TimerManager } from "../utils/timerManager";
 import { AuthUtils } from "../utils/auth";
+import { api } from "../api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -105,13 +106,13 @@ export default function HomeScreen() {
             const token = await AuthUtils.getToken();
 
             const [userRes, plansRes, dailyRes] = await Promise.all([
-                axios.get("http://192.168.0.17:3333/user", {
+                api.get("/user", {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
-                axios.get("http://192.168.0.17:3333/study-plan", {
+                api.get("/study-plan", {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
-                axios.get("http://192.168.0.17:3333/study-plan/daily", {
+                api.get("/study-plan/daily", {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
             ]);
@@ -218,6 +219,12 @@ export default function HomeScreen() {
                         <Text style={styles.title}>Bem-vindo, {user.name} 👋</Text>
                         <Text style={styles.subtitle}>{user.email}</Text>
                     </View>
+                    <TouchableOpacity
+                        style={styles.logoutButton}
+                        onPress={() => navigation.navigate("Profile")}
+                    >
+                        <Text style={styles.logoutButtonText}>Perfil</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.logoutButton}
                         onPress={handleLogout}
