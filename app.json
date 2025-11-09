@@ -1,6 +1,5 @@
 {
   "expo": {
-    "assets": [".src/assets/fonts/"],
     "assetBundlePatterns": ["**/*"],
     "name": "mind-quest-frontend-main",
     "slug": "mind-quest-frontend-main",
@@ -28,7 +27,8 @@
       "favicon": ""
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ]
   }
 }

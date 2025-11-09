@@ -26,7 +26,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
     const { day } = route.params;
     const timerKey = `timer_${day.study_plan_day_id}`;
     
-    // Calcula os segundos restantes baseado no progresso já feito
     const calculateRemainingSeconds = () => {
         const totalSeconds = day.allocated_minutes * 60;
         const completeMinutesStudied = Math.floor(day.studied_minutes);
@@ -52,12 +51,10 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const appState = useRef(AppState.currentState);
 
-    // Inicialização do timer
     useEffect(() => {
         checkForConflictingTimer();
     }, []);
 
-    // Monitor do AppState para detectar quando o app volta ao foco
     useEffect(() => {
         const handleAppStateChange = (nextAppState: AppStateStatus) => {
             if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
@@ -71,7 +68,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         return () => subscription?.remove();
     }, []);
 
-    // Verifica se há conflito com outro timer antes de inicializar
     const checkForConflictingTimer = async () => {
         try {
             const { hasConflict, conflictingTimer } = await TimerManager.hasConflictingTimer(day.study_plan_day_id);
@@ -111,7 +107,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         }
     };
 
-    // Verifica se existe um timer rodando em background
     const checkExistingTimer = async () => {
         try {
             const timerData = await AsyncStorage.getItem(timerKey);
@@ -135,22 +130,18 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                     setRemainingSeconds(newRemainingSeconds);
                     setIsRunning(true);
                     
-                    // Se o tempo acabou enquanto estava em background
                     if (newRemainingSeconds === 0) {
                         await handleTimerComplete(savedInitialSeconds);
                         return;
                     }
                     
-                    // Continua o timer visual
                     startVisualTimer();
                 } else {
-                    // Timer parado, apenas restaura o estado
                     const remaining = calculateRemainingSeconds();
                     setRemainingSeconds(remaining);
                     setInitialSeconds(remaining);
                 }
             } else {
-                // Primeira vez ou sem timer salvo
                 const remaining = calculateRemainingSeconds();
                 setRemainingSeconds(remaining);
                 setInitialSeconds(remaining);
@@ -163,7 +154,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         }
     };
 
-    // Inicia apenas o timer visual (a contagem real fica no AsyncStorage)
     const startVisualTimer = () => {
         if (timerRef.current) clearInterval(timerRef.current);
         
@@ -182,7 +172,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
     const startTimer = async () => {
         if (isRunning) return;
         
-        // Verifica novamente se há conflito antes de iniciar
         const { hasConflict, conflictingTimer } = await TimerManager.hasConflictingTimer(day.study_plan_day_id);
         
         if (hasConflict && conflictingTimer) {
@@ -206,7 +195,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
             const startTime = Date.now();
             const currentInitialSeconds = remainingSeconds;
             
-            // Salva o estado do timer no AsyncStorage local
             await AsyncStorage.setItem(timerKey, JSON.stringify({
                 startTime,
                 initialSeconds: currentInitialSeconds,
@@ -214,7 +202,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                 dayId: day.study_plan_day_id
             }));
 
-            // Salva no TimerManager global
             const activeTimer: ActiveTimer = {
                 startTime,
                 initialSeconds: currentInitialSeconds,
@@ -245,7 +232,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
             if (timerRef.current) clearInterval(timerRef.current);
             setIsRunning(false);
             
-            // Para o timer no AsyncStorage local
             await AsyncStorage.setItem(timerKey, JSON.stringify({
                 startTime: null,
                 initialSeconds: 0,
@@ -253,10 +239,8 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                 dayId: day.study_plan_day_id
             }));
 
-            // Remove do TimerManager global
             await TimerManager.clearActiveTimer();
             
-            // Calcula quanto foi estudado
             const secondsStudiedInThisSession = initialSeconds - remainingSeconds;
             const completeMinutesStudiedInThisSession = Math.floor(secondsStudiedInThisSession / 60);
             
@@ -267,7 +251,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                 completeMinutesStudiedInThisSession
             });
             
-            // Só salva se estudou pelo menos 1 minuto completo
             if (completeMinutesStudiedInThisSession > 0) {
                 await finishStudy(completeMinutesStudiedInThisSession);
             } else {
@@ -281,10 +264,7 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
 
     const handleTimerComplete = async (totalInitialSeconds: number) => {
         try {
-            // Remove o timer do AsyncStorage local
             await AsyncStorage.removeItem(timerKey);
-            
-            // Remove do TimerManager global
             await TimerManager.clearActiveTimer();
             
             setIsRunning(false);
@@ -328,7 +308,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         return `${m}:${s}`;
     };
 
-    // Cleanup quando sair da tela
     useEffect(() => {
         return () => {
             if (timerRef.current) {
@@ -337,28 +316,85 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         };
     }, []);
 
+    // Calcula a porcentagem de progresso
+    const calculateProgress = () => {
+        if (initialSeconds === 0) return 0;
+        return ((initialSeconds - remainingSeconds) / initialSeconds) * 100;
+    };
+
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>{day.content.subject}</Text>
-            <Text style={styles.info}>Alocado: {day.allocated_minutes} min</Text>
-            <Text style={styles.info}>Estudado: {Math.floor(day.studied_minutes)} min</Text>
-            <Text style={styles.timer}>{formatTime(remainingSeconds)}</Text>
-            
+            {/* Header */}
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>⚔️ QUEST ATIVA</Text>
+            </View>
+
+            {/* Subject Card */}
+            <View style={styles.subjectCard}>
+                <Text style={styles.subjectIcon}>📚</Text>
+                <Text style={styles.subjectTitle}>{day.content.subject}</Text>
+            </View>
+
+            {/* Stats Panel */}
+            <View style={styles.statsPanel}>
+                <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>ALOCADO</Text>
+                    <Text style={styles.statValue}>{day.allocated_minutes} MIN</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>ESTUDADO</Text>
+                    <Text style={styles.statValue}>{Math.floor(day.studied_minutes)} MIN</Text>
+                </View>
+            </View>
+
+            {/* Timer Display */}
+            <View style={styles.timerContainer}>
+                <View style={styles.timerBorder}>
+                    <View style={styles.timerInner}>
+                        <Text style={styles.timerLabel}>TEMPO RESTANTE</Text>
+                        <Text style={styles.timerDisplay}>{formatTime(remainingSeconds)}</Text>
+                        
+                        {/* Progress Bar */}
+                        <View style={styles.progressBarContainer}>
+                            <View 
+                                style={[
+                                    styles.progressBar, 
+                                    { width: `${calculateProgress()}%` }
+                                ]} 
+                            />
+                        </View>
+                        <Text style={styles.progressText}>
+                            {Math.floor(calculateProgress())}% COMPLETO
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* Status Indicator */}
             {isRunning && (
-                <Text style={styles.status}>⏰ Timer rodando em background</Text>
+                <View style={styles.statusBanner}>
+                    <Text style={styles.statusIcon}>⏰</Text>
+                    <Text style={styles.statusText}>RODANDO EM BACKGROUND</Text>
+                </View>
             )}
 
-            <View style={styles.buttons}>
+            {/* Action Buttons */}
+            <View style={styles.buttonContainer}>
                 {!isRunning ? (
                     <TouchableOpacity style={styles.buttonStart} onPress={startTimer}>
-                        <Text style={styles.buttonText}>Iniciar</Text>
+                        <Text style={styles.buttonIcon}>▶</Text>
+                        <Text style={styles.buttonText}>INICIAR</Text>
                     </TouchableOpacity>
                 ) : (
                     <TouchableOpacity style={styles.buttonStop} onPress={stopTimer}>
-                        <Text style={styles.buttonText}>Parar</Text>
+                        <Text style={styles.buttonIcon}>■</Text>
+                        <Text style={styles.buttonText}>PARAR</Text>
                     </TouchableOpacity>
                 )}
             </View>
+
+            {/* Back Button */}
             <TouchableOpacity
                 style={styles.buttonBack}
                 onPress={() => {
@@ -378,21 +414,215 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                         navigation.goBack();
                     }
                 }}>
-                <Text style={styles.buttonText}>Voltar</Text>
+                <Text style={styles.buttonText}>← VOLTAR</Text>
             </TouchableOpacity>
+
+            {/* Footer Decoration */}
+            <View style={styles.footer}>
+                <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-    title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
-    info: { fontSize: 16, marginBottom: 10 },
-    timer: { fontSize: 48, fontWeight: "bold", marginBottom: 20 },
-    status: { fontSize: 14, color: "#666", marginBottom: 20, fontStyle: "italic" },
-    buttons: { flexDirection: "row", marginBottom: 20 },
-    buttonStart: { backgroundColor: "#3b82f6", padding: 15, borderRadius: 12, marginHorizontal: 10 },
-    buttonStop: { backgroundColor: "#ef4444", padding: 15, borderRadius: 12, marginHorizontal: 10 },
-    buttonBack: { backgroundColor: "#6b7280", padding: 15, borderRadius: 12, marginHorizontal: 10 },
-    buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+    container: {
+        flex: 1,
+        backgroundColor: "#1a1a2e",
+        padding: 16,
+        justifyContent: "center",
+    },
+
+    // Header
+    header: {
+        backgroundColor: "#0f3460",
+        padding: 16,
+        marginBottom: 24,
+        borderWidth: 4,
+        borderColor: "#16213e",
+        alignItems: "center",
+    },
+    headerTitle: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 14,
+        color: "#FFD700",
+        textShadowColor: "#000",
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 0,
+    },
+
+    // Subject Card
+    subjectCard: {
+        backgroundColor: "#16213e",
+        borderWidth: 4,
+        borderColor: "#3b82f6",
+        padding: 20,
+        marginBottom: 24,
+        alignItems: "center",
+    },
+    subjectIcon: {
+        fontSize: 32,
+        marginBottom: 12,
+    },
+    subjectTitle: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 14,
+        color: "#fff",
+        textAlign: "center",
+        lineHeight: 24,
+    },
+
+    // Stats Panel
+    statsPanel: {
+        backgroundColor: "#16213e",
+        borderWidth: 4,
+        borderColor: "#0f3460",
+        padding: 16,
+        marginBottom: 24,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    statBox: {
+        flex: 1,
+        alignItems: "center",
+    },
+    statDivider: {
+        width: 4,
+        height: 40,
+        backgroundColor: "#0f3460",
+    },
+    statLabel: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#94a3b8",
+        marginBottom: 8,
+    },
+    statValue: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#FFD700",
+    },
+
+    // Timer Display
+    timerContainer: {
+        marginBottom: 24,
+    },
+    timerBorder: {
+        backgroundColor: "#FFD700",
+        borderWidth: 4,
+        borderColor: "#FFA500",
+        padding: 4,
+    },
+    timerInner: {
+        backgroundColor: "#0f3460",
+        padding: 24,
+        alignItems: "center",
+    },
+    timerLabel: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#94a3b8",
+        marginBottom: 16,
+    },
+    timerDisplay: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 48,
+        color: "#FFD700",
+        marginBottom: 20,
+        textShadowColor: "#000",
+        textShadowOffset: { width: 3, height: 3 },
+        textShadowRadius: 0,
+    },
+
+    // Progress Bar
+    progressBarContainer: {
+        width: "100%",
+        height: 16,
+        backgroundColor: "#16213e",
+        borderWidth: 3,
+        borderColor: "#1a1a2e",
+        marginBottom: 12,
+    },
+    progressBar: {
+        height: "100%",
+        backgroundColor: "#10b981",
+    },
+    progressText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#10b981",
+    },
+
+    // Status Banner
+    statusBanner: {
+        backgroundColor: "#3b82f6",
+        borderWidth: 4,
+        borderColor: "#2563eb",
+        padding: 12,
+        marginBottom: 24,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 12,
+    },
+    statusIcon: {
+        fontSize: 20,
+    },
+    statusText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
+        color: "#fff",
+    },
+
+    // Buttons
+    buttonContainer: {
+        marginBottom: 16,
+    },
+    buttonStart: {
+        backgroundColor: "#10b981",
+        borderWidth: 4,
+        borderColor: "#059669",
+        padding: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 12,
+    },
+    buttonStop: {
+        backgroundColor: "#e94560",
+        borderWidth: 4,
+        borderColor: "#c23854",
+        padding: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 12,
+    },
+    buttonBack: {
+        backgroundColor: "#64748b",
+        borderWidth: 4,
+        borderColor: "#475569",
+        padding: 16,
+        alignItems: "center",
+    },
+    buttonIcon: {
+        fontSize: 20,
+        color: "#fff",
+    },
+    buttonText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#fff",
+    },
+
+    // Footer
+    footer: {
+        marginTop: 24,
+        alignItems: "center",
+    },
+    footerText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#0f3460",
+    },
 });

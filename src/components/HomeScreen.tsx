@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from "react-native";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { RootStackParamList } from "../../App"; // ajuste conforme seu projeto
+import { RootStackParamList } from "../../App";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TimerManager } from "../utils/timerManager";
@@ -50,13 +50,11 @@ export default function HomeScreen() {
         remainingTime: string;
     } | null>(null);
 
-    // Função para verificar se há timer ativo
     const checkActiveTimer = useCallback(async () => {
         try {
             const { hasActiveTimer, timerData } = await TimerManager.checkForActiveTimer();
             
             if (hasActiveTimer && timerData) {
-                // Calcula o tempo restante para exibir na interface
                 const currentTime = Date.now();
                 const elapsedSeconds = Math.floor((currentTime - timerData.startTime) / 1000);
                 const remainingSeconds = Math.max(0, timerData.initialSeconds - elapsedSeconds);
@@ -69,11 +67,6 @@ export default function HomeScreen() {
                     subject: timerData.dayData.content.subject,
                     remainingTime: timeString
                 });
-                
-                console.log('Timer ativo encontrado:', {
-                    subject: timerData.dayData.content.subject,
-                    remainingTime: timeString
-                });
             } else {
                 setActiveTimerInfo(null);
             }
@@ -83,7 +76,6 @@ export default function HomeScreen() {
         }
     }, []);
 
-    // Função para navegar para o timer ativo
     const goToActiveTimer = async () => {
         try {
             const { hasActiveTimer, timerData } = await TimerManager.checkForActiveTimer();
@@ -129,7 +121,6 @@ export default function HomeScreen() {
         }
     }, []);
 
-    // Este hook executa toda vez que a tela ganha foco
     useFocusEffect(
         useCallback(() => {
             fetchData();
@@ -167,16 +158,10 @@ export default function HomeScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            // Remove o token do AsyncStorage
                             await AsyncStorage.removeItem("token");
-
-                            // Se você estiver usando SecureStore também, remova de lá
-                            // await SecureStore.deleteItemAsync("token");
-
-                            // Navega para a tela de login (ou a tela inicial)
                             navigation.reset({
                                 index: 0,
-                                routes: [{ name: 'Login' }], // Ajuste o nome da sua tela de login
+                                routes: [{ name: 'Login' }],
                             });
                         } catch (error) {
                             console.error("Erro ao fazer logout:", error);
@@ -193,234 +178,465 @@ export default function HomeScreen() {
             style={[styles.card, overdue && styles.overdueCard]}
             onPress={() => navigation.navigate("DailyStudyPlan", { day: item })}
         >
-            <Text style={styles.cardTitle}>{item.content.subject}</Text>
-            <Text>Status: {item.status}</Text>
-            <Text>
-                {item.studied_minutes}/{item.allocated_minutes} min
-            </Text>
-            {overdue && <Text style={styles.overdueText}>Atrasado</Text>}
+            <View style={styles.cardHeader}>
+                <Text style={styles.cardIcon}>{overdue ? "⚠️" : "📚"}</Text>
+                <Text style={styles.cardTitle}>{item.content.subject}</Text>
+            </View>
+            <View style={styles.cardDivider} />
+            <View style={styles.cardStats}>
+                <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>STATUS:</Text>
+                    <Text style={styles.statValue}>{item.status}</Text>
+                </View>
+                <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>TEMPO:</Text>
+                    <Text style={styles.statValue}>
+                        {item.studied_minutes}/{item.allocated_minutes} MIN
+                    </Text>
+                </View>
+            </View>
+            {overdue && (
+                <View style={styles.overdueTag}>
+                    <Text style={styles.overdueTagText}>! ATRASADO !</Text>
+                </View>
+            )}
         </TouchableOpacity>
     );
 
     if (loading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" />
+                <View style={styles.loadingBox}>
+                    <Text style={styles.loadingText}>CARREGANDO...</Text>
+                    <ActivityIndicator size="large" color="#FFD700" />
+                </View>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            {/* Header com botão de logout */}
+            {/* Header Pixel Art */}
             {user && (
                 <View style={styles.header}>
-                    <View style={styles.userInfo}>
-                        <Text style={styles.title}>Bem-vindo, {user.name} 👋</Text>
-                        <Text style={styles.subtitle}>{user.email}</Text>
+                    <View style={styles.headerTop}>
+                        <Text style={styles.headerTitle}>🎮 STUDY QUEST</Text>
                     </View>
-                    <TouchableOpacity
-                        style={styles.logoutButton}
-                        onPress={() => navigation.navigate("Profile")}
-                    >
-                        <Text style={styles.logoutButtonText}>Perfil</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.logoutButton}
-                        onPress={handleLogout}
-                    >
-                        <Text style={styles.logoutButtonText}>Sair</Text>
-                    </TouchableOpacity>
+                    <View style={styles.headerMiddle}>
+                        <View style={styles.userInfo}>
+                            <Text style={styles.playerTag}>PLAYER:</Text>
+                            <Text style={styles.playerName}>{user.name}</Text>
+                            <Text style={styles.playerEmail}>{user.email}</Text>
+                        </View>
+                        <View style={styles.headerButtons}>
+                            <TouchableOpacity
+                                style={styles.pixelButton}
+                                onPress={() => navigation.navigate("Profile")}
+                            >
+                                <Text style={styles.pixelButtonText}>PERFIL</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.pixelButton, styles.logoutBtn]}
+                                onPress={handleLogout}
+                            >
+                                <Text style={styles.pixelButtonText}>SAIR</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
             )}
 
-            {/* Banner de timer ativo */}
-            {activeTimerInfo && (
-                <TouchableOpacity
-                    style={styles.activeTimerBanner}
-                    onPress={goToActiveTimer}
-                >
-                    <View style={styles.timerIconContainer}>
-                        <Text style={styles.timerIcon}>⏰</Text>
-                    </View>
-                    <View style={styles.timerTextContainer}>
-                        <Text style={styles.timerActiveText}>Timer ativo</Text>
-                        <Text style={styles.timerSubject}>{activeTimerInfo.subject}</Text>
-                        <Text style={styles.timerTime}>{activeTimerInfo.remainingTime}</Text>
-                    </View>
-                    <Text style={styles.timerArrow}>→</Text>
-                </TouchableOpacity>
-            )}
-
-            {/* Atrasados */}
-            {overduePlans.length > 0 && (
-                <>
-                    <Text style={styles.sectionTitle}>Planos atrasados</Text>
-                    <FlatList
-                        data={overduePlans}
-                        keyExtractor={(item) => item.study_plan_day_id}
-                        renderItem={({ item }) => renderDailyCard(item, true)}
-                    />
-                </>
-            )}
-
-            <Text style={styles.sectionTitle}>Em andamento</Text>
-            {inProgress.length > 0 ? (
-                <FlatList
-                    data={inProgress}
-                    keyExtractor={(item) => item.study_plan_day_id}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.card}
-                            onPress={() => navigation.navigate("DailyStudyPlan", { day: item })}
-                        >
-                            <Text style={styles.cardTitle}>{item.content.subject}</Text>
-                            <Text>Status: {item.status}</Text>
-                            <Text>
-                                {item.studied_minutes}/{item.allocated_minutes} min
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                />
-            ) : (
-                <Text style={styles.empty}>Nenhum plano em andamento</Text>
-            )}
-
-
-            {/* Hoje */}
-            <Text style={styles.sectionTitle}>Plano de hoje</Text>
-            {todayPlans.length > 0 ? (
-                <FlatList
-                    data={todayPlans}
-                    keyExtractor={(item) => item.study_plan_day_id}
-                    renderItem={({ item }) => renderDailyCard(item)}
-                />
-            ) : (
-                <Text style={styles.empty}>Nenhum estudo planejado para hoje</Text>
-            )}
-
-            {/* Lista de planos gerais */}
-            <Text style={styles.sectionTitle}>Seus planos de estudo</Text>
-            <FlatList
-                data={studyPlans}
-                keyExtractor={(item) => item.study_plan_id}
-                renderItem={({ item }) => (
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Timer Ativo Banner */}
+                {activeTimerInfo && (
                     <TouchableOpacity
-                        style={styles.card}
-                        onPress={() => navigation.navigate("StudyPlanDetails", { id: item.study_plan_id })}
+                        style={styles.activeTimerBanner}
+                        onPress={goToActiveTimer}
                     >
-                        <Text style={styles.cardTitle}>{item.subject}</Text>
-                        <Text>
-                            {new Date(item.start_date).toLocaleDateString()} →{" "}
-                            {new Date(item.end_date).toLocaleDateString()}
-                        </Text>
-                        <Text>Total: {item.total_minutes} min</Text>
+                        <View style={styles.timerPulse}>
+                            <Text style={styles.timerIcon}>⏰</Text>
+                        </View>
+                        <View style={styles.timerContent}>
+                            <Text style={styles.timerLabel}>▶ TIMER ATIVO</Text>
+                            <Text style={styles.timerSubject}>{activeTimerInfo.subject}</Text>
+                            <Text style={styles.timerTime}>{activeTimerInfo.remainingTime}</Text>
+                        </View>
+                        <Text style={styles.timerArrow}>►</Text>
                     </TouchableOpacity>
                 )}
-            />
 
-            {/* Criar plano */}
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate("CreateStudyPlan")}
-            >
-                <Text style={styles.buttonText}>+ Criar plano de estudo</Text>
-            </TouchableOpacity>
+                {/* Planos Atrasados */}
+                {overduePlans.length > 0 && (
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>⚠ ATRASADOS</Text>
+                        </View>
+                        {overduePlans.map((item) => (
+                            <View key={item.study_plan_day_id}>
+                                {renderDailyCard(item, true)}
+                            </View>
+                        ))}
+                    </View>
+                )}
+
+                {/* Em Andamento */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>▶ EM ANDAMENTO</Text>
+                    </View>
+                    {inProgress.length > 0 ? (
+                        inProgress.map((item) => (
+                            <TouchableOpacity
+                                key={item.study_plan_day_id}
+                                style={styles.cardInProgress}
+                                onPress={() => navigation.navigate("DailyStudyPlan", { day: item })}
+                            >
+                                <View style={styles.cardHeader}>
+                                    <Text style={styles.cardIcon}>🎯</Text>
+                                    <Text style={styles.cardTitle}>{item.content.subject}</Text>
+                                </View>
+                                <View style={styles.cardDivider} />
+                                <View style={styles.cardStats}>
+                                    <View style={styles.statItem}>
+                                        <Text style={styles.statLabel}>STATUS:</Text>
+                                        <Text style={styles.statValue}>{item.status}</Text>
+                                    </View>
+                                    <View style={styles.statItem}>
+                                        <Text style={styles.statLabel}>TEMPO:</Text>
+                                        <Text style={styles.statValue}>
+                                            {item.studied_minutes}/{item.allocated_minutes} MIN
+                                        </Text>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        ))
+                    ) : (
+                        <View style={styles.emptyBox}>
+                            <Text style={styles.emptyText}>NENHUMA QUEST ATIVA</Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Plano de Hoje */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>📅 HOJE</Text>
+                    </View>
+                    {todayPlans.length > 0 ? (
+                        todayPlans.map((item) => (
+                            <View key={item.study_plan_day_id}>
+                                {renderDailyCard(item)}
+                            </View>
+                        ))
+                    ) : (
+                        <View style={styles.emptyBox}>
+                            <Text style={styles.emptyText}>NENHUMA QUEST PARA HOJE</Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Planos de Estudo */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>📋 SEUS PLANOS</Text>
+                    </View>
+                    {studyPlans.map((item) => (
+                        <TouchableOpacity
+                            key={item.study_plan_id}
+                            style={styles.planCard}
+                            onPress={() => navigation.navigate("StudyPlanDetails", { id: item.study_plan_id })}
+                        >
+                            <View style={styles.cardHeader}>
+                                <Text style={styles.cardIcon}>📖</Text>
+                                <Text style={styles.cardTitle}>{item.subject}</Text>
+                            </View>
+                            <View style={styles.cardDivider} />
+                            <View style={styles.planInfo}>
+                                <Text style={styles.planDate}>
+                                    {new Date(item.start_date).toLocaleDateString()} → {new Date(item.end_date).toLocaleDateString()}
+                                </Text>
+                                <Text style={styles.planTotal}>TOTAL: {item.total_minutes} MIN</Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Botão Criar Plano */}
+                <TouchableOpacity
+                    style={styles.createButton}
+                    onPress={() => navigation.navigate("CreateStudyPlan")}
+                >
+                    <Text style={styles.createButtonText}>+ NOVA QUEST</Text>
+                </TouchableOpacity>
+            </ScrollView>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: "#f5f5f5" },
-    center: { flex: 1, justifyContent: "center", alignItems: "center" },
-    header: {
+    container: {
+        flex: 1,
+        padding: 12,
+        backgroundColor: "#1a1a2e",
+    },
+    center: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#1a1a2e",
+    },
+    loadingBox: {
+        backgroundColor: "#16213e",
+        padding: 30,
+        borderRadius: 0,
+        borderWidth: 4,
+        borderColor: "#0f3460",
+        alignItems: "center",
+    },
+    loadingText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 14,
+        color: "#FFD700",
         marginBottom: 20,
+    },
+    // Header Styles
+    header: {
+        marginBottom: 16,
+        backgroundColor: "#16213e",
+        borderWidth: 4,
+        borderColor: "#0f3460",
+        borderRadius: 0,
+    },
+    headerTop: {
+        backgroundColor: "#0f3460",
+        padding: 12,
+        alignItems: "center",
+    },
+    headerTitle: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 16,
+        color: "#FFD700",
+        textShadowColor: "#000",
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 0,
+    },
+    headerMiddle: {
+        padding: 12,
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "flex-start"
+        alignItems: "center",
     },
     userInfo: {
-        flex: 1
+        flex: 1,
     },
-    title: { fontSize: 22, fontWeight: "bold" },
-    subtitle: { fontSize: 16, color: "gray" },
-    logoutButton: {
-        backgroundColor: "#ef4444",
-        paddingHorizontal: 16,
+    playerTag: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#FFD700",
+        marginBottom: 4,
+    },
+    playerName: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#e94560",
+        marginBottom: 4,
+    },
+    playerEmail: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#94a3b8",
+    },
+    headerButtons: {
+        gap: 8,
+    },
+    pixelButton: {
+        backgroundColor: "#0f3460",
+        paddingHorizontal: 12,
         paddingVertical: 8,
-        borderRadius: 8,
-        marginLeft: 10
+        borderWidth: 3,
+        borderColor: "#16213e",
+        borderRadius: 0,
     },
-    logoutButtonText: {
+    logoutBtn: {
+        backgroundColor: "#e94560",
+        borderColor: "#c23854",
+    },
+    pixelButtonText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
         color: "#fff",
-        fontSize: 14,
-        fontWeight: "600"
     },
-    sectionTitle: { fontSize: 18, fontWeight: "600", marginVertical: 10 },
-    card: {
-        backgroundColor: "#fff",
-        padding: 15,
-        borderRadius: 12,
-        marginBottom: 10,
-        elevation: 2,
-    },
-    overdueCard: { backgroundColor: "#fde2e2" },
-    overdueText: { color: "#d32f2f", fontWeight: "bold" },
-    cardTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
-    button: {
-        backgroundColor: "#3b82f6",
-        padding: 15,
-        borderRadius: 12,
-        alignItems: "center",
-        marginTop: 20,
-    },
-    buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-    empty: { color: "gray", fontStyle: "italic" },
+    // Timer Banner
     activeTimerBanner: {
-        backgroundColor: "#3b82f6",
-        borderRadius: 12,
+        backgroundColor: "#FFD700",
+        borderWidth: 4,
+        borderColor: "#FFA500",
         padding: 16,
-        marginBottom: 20,
+        marginBottom: 16,
         flexDirection: "row",
         alignItems: "center",
-        elevation: 3,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
     },
-    timerIconContainer: {
+    timerPulse: {
         marginRight: 12,
     },
     timerIcon: {
-        fontSize: 24,
+        fontSize: 32,
     },
-    timerTextContainer: {
+    timerContent: {
         flex: 1,
     },
-    timerActiveText: {
-        color: "#fff",
-        fontSize: 12,
-        fontWeight: "600",
-        opacity: 0.9,
-        marginBottom: 2,
+    timerLabel: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#1a1a2e",
+        marginBottom: 4,
     },
     timerSubject: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "bold",
-        marginBottom: 2,
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#1a1a2e",
+        marginBottom: 4,
     },
     timerTime: {
-        color: "#fff",
-        fontSize: 18,
-        fontWeight: "700",
-        fontFamily: "monospace", // Para uma fonte monoespaçada como o tempo
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 16,
+        color: "#e94560",
     },
     timerArrow: {
-        color: "#fff",
+        fontSize: 24,
+        color: "#1a1a2e",
+    },
+    // Section Styles
+    section: {
+        marginBottom: 16,
+    },
+    sectionHeader: {
+        backgroundColor: "#0f3460",
+        padding: 8,
+        marginBottom: 8,
+        borderWidth: 3,
+        borderColor: "#16213e",
+    },
+    sectionTitle: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#FFD700",
+    },
+    // Card Styles
+    card: {
+        backgroundColor: "#16213e",
+        padding: 12,
+        marginBottom: 8,
+        borderWidth: 4,
+        borderColor: "#0f3460",
+    },
+    overdueCard: {
+        backgroundColor: "#2d1515",
+        borderColor: "#e94560",
+    },
+    cardInProgress: {
+        backgroundColor: "#1a2f1a",
+        borderColor: "#10b981",
+        borderWidth: 4,
+        padding: 12,
+        marginBottom: 8,
+    },
+    planCard: {
+        backgroundColor: "#16213e",
+        borderColor: "#3b82f6",
+        borderWidth: 4,
+        padding: 12,
+        marginBottom: 8,
+    },
+    cardHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    cardIcon: {
         fontSize: 20,
-        fontWeight: "bold",
-        opacity: 0.7,
+        marginRight: 8,
+    },
+    cardTitle: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#fff",
+        flex: 1,
+    },
+    cardDivider: {
+        height: 2,
+        backgroundColor: "#0f3460",
+        marginVertical: 8,
+    },
+    cardStats: {
+        gap: 6,
+    },
+    statItem: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
+    statLabel: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#94a3b8",
+    },
+    statValue: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#e94560",
+    },
+    overdueTag: {
+        backgroundColor: "#e94560",
+        padding: 6,
+        marginTop: 8,
+        alignItems: "center",
+    },
+    overdueTagText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#fff",
+    },
+    planInfo: {
+        gap: 6,
+    },
+    planDate: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#94a3b8",
+    },
+    planTotal: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#FFD700",
+    },
+    // Empty State
+    emptyBox: {
+        backgroundColor: "#16213e",
+        padding: 20,
+        alignItems: "center",
+        borderWidth: 4,
+        borderColor: "#0f3460",
+        borderStyle: "dashed",
+    },
+    emptyText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
+        color: "#94a3b8",
+        textAlign: "center",
+    },
+    // Create Button
+    createButton: {
+        backgroundColor: "#10b981",
+        padding: 16,
+        alignItems: "center",
+        marginTop: 16,
+        marginBottom: 20,
+        borderWidth: 4,
+        borderColor: "#059669",
+    },
+    createButtonText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#fff",
     },
 });

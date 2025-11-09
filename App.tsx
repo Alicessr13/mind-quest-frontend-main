@@ -11,6 +11,7 @@ import CreateStudyPlanScreen from "./src/components/CreateStudyPlan";
 import DailyStudyScreen from "./src/components/DailyStudyPlan";
 import UserProfile from "./src/components/UserProfile";
 import ShopScreen from "./src/components/ShopScreen";
+import { useFonts } from "expo-font";
 
 interface DailyPlan {
     study_plan_day_id: string;
@@ -48,6 +49,10 @@ export default function App() {
     const [isLoading, setIsLoading] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+    const [fontsLoaded, fontError] = useFonts({
+        'PressStart2P-Regular': require('./src/assets/fonts/PressStart2P-Regular.ttf'),
+    });
+
     // Função para verificar se o usuário já está logado
     const checkAuthState = async () => {
         try {
@@ -67,8 +72,15 @@ export default function App() {
     }, []);
 
     // Mostra tela de loading enquanto verifica a autenticação
-    if (isLoading) {
+    if (isLoading || !fontsLoaded) {
         return <LoadingScreen />;
+    }
+
+    // Opcional: Adicione uma verificação para o caso de a fonte falhar
+    if (fontError) {
+        // Você pode tratar o erro aqui, por enquanto vamos logar
+        console.error("Erro ao carregar a fonte:", fontError);
+        return <LoadingScreen />; // Continua no loading para evitar crash
     }
 
     return (

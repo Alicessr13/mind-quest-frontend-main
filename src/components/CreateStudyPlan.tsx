@@ -11,13 +11,13 @@ import { api } from "../api";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "CreateStudyPlan">;
 
 const weekDays = [
-    { label: "Dom", value: 0 },
-    { label: "Seg", value: 1 },
-    { label: "Ter", value: 2 },
-    { label: "Qua", value: 3 },
-    { label: "Qui", value: 4 },
-    { label: "Sex", value: 5 },
-    { label: "Sáb", value: 6 },
+    { label: "DOM", value: 0, emoji: "🌙" },
+    { label: "SEG", value: 1, emoji: "⭐" },
+    { label: "TER", value: 2, emoji: "⭐" },
+    { label: "QUA", value: 3, emoji: "⭐" },
+    { label: "QUI", value: 4, emoji: "⭐" },
+    { label: "SEX", value: 5, emoji: "⭐" },
+    { label: "SAB", value: 6, emoji: "🌙" },
 ];
 
 export default function CreateStudyPlanScreen() {
@@ -29,7 +29,6 @@ export default function CreateStudyPlanScreen() {
     const [weekDaysSelected, setWeekDaysSelected] = useState<number[]>([]);
     const [minutesPerDay, setMinutesPerDay] = useState("");
     
-    // Estados para controlar a visibilidade dos DatePickers
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
@@ -85,121 +84,293 @@ export default function CreateStudyPlanScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.label}>Matéria</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Digite a matéria"
-                value={subject}
-                onChangeText={setSubject}
-            />
-
-            <Text style={styles.label}>Data de início</Text>
-            <TouchableOpacity 
-                style={styles.dateButton} 
-                onPress={() => setShowStartDatePicker(true)}
-            >
-                <Text style={styles.dateText}>{formatDate(startDate)}</Text>
-            </TouchableOpacity>
-            {showStartDatePicker && (
-                <DateTimePicker
-                    value={startDate}
-                    mode="date"
-                    display="default"
-                    onChange={onStartDateChange}
-                />
-            )}
-
-            <Text style={styles.label}>Data de término</Text>
-            <TouchableOpacity 
-                style={styles.dateButton} 
-                onPress={() => setShowEndDatePicker(true)}
-            >
-                <Text style={styles.dateText}>{formatDate(endDate)}</Text>
-            </TouchableOpacity>
-            {showEndDatePicker && (
-                <DateTimePicker
-                    value={endDate}
-                    mode="date"
-                    display="default"
-                    onChange={onEndDateChange}
-                />
-            )}
-
-            <Text style={styles.label}>Dias da semana</Text>
-            <View style={styles.weekDaysContainer}>
-                {weekDays.map((day) => (
-                    <TouchableOpacity
-                        key={day.value}
-                        style={[
-                            styles.weekDayButton,
-                            weekDaysSelected.includes(day.value) && styles.weekDayButtonSelected,
-                        ]}
-                        onPress={() => toggleWeekDay(day.value)}
-                    >
-                        <Text style={styles.weekDayText}>{day.label}</Text>
-                    </TouchableOpacity>
-                ))}
+            {/* Header */}
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>🎮 NOVA QUEST</Text>
+                <Text style={styles.headerSubtitle}>CRIAR PLANO DE ESTUDOS</Text>
             </View>
 
-            <Text style={styles.label}>Minutos por dia</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Ex: 30"
-                keyboardType="numeric"
-                value={minutesPerDay}
-                onChangeText={setMinutesPerDay}
-            />
+            {/* Matéria */}
+            <View style={styles.inputGroup}>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>📚 MATÉRIA</Text>
+                </View>
+                <View style={styles.inputWrapper}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="DIGITE A MATÉRIA..."
+                        placeholderTextColor="#64748b"
+                        value={subject}
+                        onChangeText={setSubject}
+                    />
+                </View>
+            </View>
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                <Text style={styles.buttonText}>Criar Plano de Estudos</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => {
-                    navigation.goBack();
-                }}>
-                <Text style={styles.buttonText}>Voltar</Text>
-            </TouchableOpacity>
+            {/* Data de Início */}
+            <View style={styles.inputGroup}>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>📅 DATA INÍCIO</Text>
+                </View>
+                <TouchableOpacity 
+                    style={styles.dateButton} 
+                    onPress={() => setShowStartDatePicker(true)}
+                >
+                    <Text style={styles.dateIcon}>▶</Text>
+                    <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+                </TouchableOpacity>
+                {showStartDatePicker && (
+                    <DateTimePicker
+                        value={startDate}
+                        mode="date"
+                        display="default"
+                        onChange={onStartDateChange}
+                    />
+                )}
+            </View>
+
+            {/* Data de Término */}
+            <View style={styles.inputGroup}>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>🏁 DATA FIM</Text>
+                </View>
+                <TouchableOpacity 
+                    style={styles.dateButton} 
+                    onPress={() => setShowEndDatePicker(true)}
+                >
+                    <Text style={styles.dateIcon}>▶</Text>
+                    <Text style={styles.dateText}>{formatDate(endDate)}</Text>
+                </TouchableOpacity>
+                {showEndDatePicker && (
+                    <DateTimePicker
+                        value={endDate}
+                        mode="date"
+                        display="default"
+                        onChange={onEndDateChange}
+                    />
+                )}
+            </View>
+
+            {/* Dias da Semana */}
+            <View style={styles.inputGroup}>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>📆 DIAS DA SEMANA</Text>
+                </View>
+                <View style={styles.weekDaysContainer}>
+                    {weekDays.map((day) => (
+                        <TouchableOpacity
+                            key={day.value}
+                            style={[
+                                styles.weekDayButton,
+                                weekDaysSelected.includes(day.value) && styles.weekDayButtonSelected,
+                            ]}
+                            onPress={() => toggleWeekDay(day.value)}
+                        >
+                            <Text style={styles.weekDayEmoji}>{day.emoji}</Text>
+                            <Text style={[
+                                styles.weekDayText,
+                                weekDaysSelected.includes(day.value) && styles.weekDayTextSelected
+                            ]}>
+                                {day.label}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </View>
+
+            {/* Minutos por Dia */}
+            <View style={styles.inputGroup}>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>⏱️ MINUTOS/DIA</Text>
+                </View>
+                <View style={styles.inputWrapper}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="EX: 30"
+                        placeholderTextColor="#64748b"
+                        keyboardType="numeric"
+                        value={minutesPerDay}
+                        onChangeText={setMinutesPerDay}
+                    />
+                </View>
+            </View>
+
+            {/* Botões de Ação */}
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
+                    <Text style={styles.createButtonText}>✓ CRIAR QUEST</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Text style={styles.backButtonText}>← VOLTAR</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Footer Decorativo */}
+            <View style={styles.footer}>
+                <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
+                <Text style={styles.footerIcon}>🎯</Text>
+            </View>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 20, backgroundColor: "#f5f5f5", flexGrow: 1 },
-    label: { fontSize: 16, fontWeight: "600", marginTop: 20 },
-    input: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 10,
-        marginTop: 5,
+    container: {
+        padding: 16,
+        backgroundColor: "#1a1a2e",
+        flexGrow: 1,
     },
-    dateButton: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 15,
-        marginTop: 5,
-        borderWidth: 1,
-        borderColor: "#ddd",
-    },
-    dateText: {
-        fontSize: 16,
-        color: "#333",
-    },
-    weekDaysContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 10 },
-    weekDayButton: {
-        padding: 10,
-        borderRadius: 8,
-        backgroundColor: "#e6e6e6",
-        margin: 5,
-    },
-    weekDayButtonSelected: { backgroundColor: "#3b82f6" },
-    weekDayText: { color: "#000", fontWeight: "600" },
-    button: {
-        marginTop: 30,
-        backgroundColor: "#3b82f6",
-        padding: 15,
-        borderRadius: 12,
+    
+    // Header
+    header: {
+        backgroundColor: "#0f3460",
+        padding: 16,
+        marginBottom: 20,
+        borderWidth: 4,
+        borderColor: "#16213e",
         alignItems: "center",
     },
-    buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+    headerTitle: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 16,
+        color: "#FFD700",
+        marginBottom: 8,
+        textShadowColor: "#000",
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 0,
+    },
+    headerSubtitle: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#94a3b8",
+    },
+
+    // Input Groups
+    inputGroup: {
+        marginBottom: 20,
+    },
+    labelContainer: {
+        backgroundColor: "#16213e",
+        padding: 8,
+        marginBottom: 8,
+        borderWidth: 3,
+        borderColor: "#0f3460",
+    },
+    label: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
+        color: "#FFD700",
+    },
+    inputWrapper: {
+        borderWidth: 4,
+        borderColor: "#0f3460",
+        backgroundColor: "#16213e",
+    },
+    input: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
+        color: "#fff",
+        padding: 12,
+        minHeight: 48,
+    },
+
+    // Date Button
+    dateButton: {
+        backgroundColor: "#16213e",
+        borderWidth: 4,
+        borderColor: "#0f3460",
+        padding: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
+    dateIcon: {
+        fontSize: 16,
+        color: "#3b82f6",
+    },
+    dateText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#fff",
+    },
+
+    // Week Days
+    weekDaysContainer: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8,
+    },
+    weekDayButton: {
+        backgroundColor: "#16213e",
+        borderWidth: 4,
+        borderColor: "#0f3460",
+        padding: 12,
+        alignItems: "center",
+        minWidth: 70,
+    },
+    weekDayButtonSelected: {
+        backgroundColor: "#0f3460",
+        borderColor: "#3b82f6",
+    },
+    weekDayEmoji: {
+        fontSize: 16,
+        marginBottom: 4,
+    },
+    weekDayText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#94a3b8",
+    },
+    weekDayTextSelected: {
+        color: "#FFD700",
+    },
+
+    // Buttons
+    buttonContainer: {
+        marginTop: 20,
+        gap: 12,
+    },
+    createButton: {
+        backgroundColor: "#10b981",
+        borderWidth: 4,
+        borderColor: "#059669",
+        padding: 16,
+        alignItems: "center",
+    },
+    createButtonText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#fff",
+    },
+    backButton: {
+        backgroundColor: "#e94560",
+        borderWidth: 4,
+        borderColor: "#c23854",
+        padding: 16,
+        alignItems: "center",
+    },
+    backButtonText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#fff",
+    },
+
+    // Footer
+    footer: {
+        marginTop: 40,
+        marginBottom: 20,
+        alignItems: "center",
+        gap: 8,
+    },
+    footerText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#0f3460",
+    },
+    footerIcon: {
+        fontSize: 24,
+    },
 });
