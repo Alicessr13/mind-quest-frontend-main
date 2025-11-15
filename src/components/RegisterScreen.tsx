@@ -53,10 +53,10 @@ export default function SignUpScreen() {
           </View>
         </View>
 
-        {/* Register Image */}
+        {/* Register Image
         <View style={styles.imageContainer}>
           <RegisterImage />
-        </View>
+        </View> */}
 
         {/* Registration Form Box */}
         <View style={styles.formBox}>

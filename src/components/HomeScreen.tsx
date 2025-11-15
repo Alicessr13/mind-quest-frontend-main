@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TimerManager } from "../utils/timerManager";
 import { AuthUtils } from "../utils/auth";
 import { api } from "../api";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -49,6 +50,19 @@ export default function HomeScreen() {
         subject: string;
         remainingTime: string;
     } | null>(null);
+    const [expandedSections, setExpandedSections] = useState({
+        overdue: false,
+        inProgress: false,
+        today: false,
+        plans: true,
+    });
+
+    const toggleSection = (section: keyof typeof expandedSections) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
 
     const checkActiveTimer = useCallback(async () => {
         try {
@@ -268,10 +282,19 @@ export default function HomeScreen() {
                 {/* Planos Atrasados */}
                 {overduePlans.length > 0 && (
                     <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
+                        <TouchableOpacity 
+                            style={styles.sectionHeader}
+                            onPress={() => toggleSection('overdue')}
+                        >
+                            <Text style={styles.sectionIcon}>
+                                {expandedSections.overdue ? '▼' : '►'}
+                            </Text>
                             <Text style={styles.sectionTitle}>⚠ ATRASADOS</Text>
-                        </View>
-                        {overduePlans.map((item) => (
+                            <View style={styles.sectionBadge}>
+                                <Text style={styles.sectionBadgeText}>{overduePlans.length}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        {expandedSections.overdue && overduePlans.map((item) => (
                             <View key={item.study_plan_day_id}>
                                 {renderDailyCard(item, true)}
                             </View>
@@ -281,66 +304,103 @@ export default function HomeScreen() {
 
                 {/* Em Andamento */}
                 <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
+                    <TouchableOpacity 
+                        style={styles.sectionHeader}
+                        onPress={() => toggleSection('inProgress')}
+                    >
+                        <Text style={styles.sectionIcon}>
+                            {expandedSections.inProgress ? '▼' : '►'}
+                        </Text>
                         <Text style={styles.sectionTitle}>▶ EM ANDAMENTO</Text>
-                    </View>
-                    {inProgress.length > 0 ? (
-                        inProgress.map((item) => (
-                            <TouchableOpacity
-                                key={item.study_plan_day_id}
-                                style={styles.cardInProgress}
-                                onPress={() => navigation.navigate("DailyStudyPlan", { day: item })}
-                            >
-                                <View style={styles.cardHeader}>
-                                    <Text style={styles.cardIcon}>🎯</Text>
-                                    <Text style={styles.cardTitle}>{item.content.subject}</Text>
-                                </View>
-                                <View style={styles.cardDivider} />
-                                <View style={styles.cardStats}>
-                                    <View style={styles.statItem}>
-                                        <Text style={styles.statLabel}>STATUS:</Text>
-                                        <Text style={styles.statValue}>{item.status}</Text>
+                        {inProgress.length > 0 && (
+                            <View style={styles.sectionBadge}>
+                                <Text style={styles.sectionBadgeText}>{inProgress.length}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                    {expandedSections.inProgress && (
+                        inProgress.length > 0 ? (
+                            inProgress.map((item) => (
+                                <TouchableOpacity
+                                    key={item.study_plan_day_id}
+                                    style={styles.cardInProgress}
+                                    onPress={() => navigation.navigate("DailyStudyPlan", { day: item })}
+                                >
+                                    <View style={styles.cardHeader}>
+                                        <Text style={styles.cardIcon}>🎯</Text>
+                                        <Text style={styles.cardTitle}>{item.content.subject}</Text>
                                     </View>
-                                    <View style={styles.statItem}>
-                                        <Text style={styles.statLabel}>TEMPO:</Text>
-                                        <Text style={styles.statValue}>
-                                            {item.studied_minutes}/{item.allocated_minutes} MIN
-                                        </Text>
+                                    <View style={styles.cardDivider} />
+                                    <View style={styles.cardStats}>
+                                        <View style={styles.statItem}>
+                                            <Text style={styles.statLabel}>STATUS:</Text>
+                                            <Text style={styles.statValue}>{item.status}</Text>
+                                        </View>
+                                        <View style={styles.statItem}>
+                                            <Text style={styles.statLabel}>TEMPO:</Text>
+                                            <Text style={styles.statValue}>
+                                                {item.studied_minutes}/{item.allocated_minutes} MIN
+                                            </Text>
+                                        </View>
                                     </View>
-                                </View>
-                            </TouchableOpacity>
-                        ))
-                    ) : (
-                        <View style={styles.emptyBox}>
-                            <Text style={styles.emptyText}>NENHUMA QUEST ATIVA</Text>
-                        </View>
+                                </TouchableOpacity>
+                            ))
+                        ) : (
+                            <View style={styles.emptyBox}>
+                                <Text style={styles.emptyText}>NENHUMA QUEST ATIVA</Text>
+                            </View>
+                        )
                     )}
                 </View>
 
                 {/* Plano de Hoje */}
                 <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
+                    <TouchableOpacity 
+                        style={styles.sectionHeader}
+                        onPress={() => toggleSection('today')}
+                    >
+                        <Text style={styles.sectionIcon}>
+                            {expandedSections.today ? '▼' : '►'}
+                        </Text>
                         <Text style={styles.sectionTitle}>📅 HOJE</Text>
-                    </View>
-                    {todayPlans.length > 0 ? (
-                        todayPlans.map((item) => (
-                            <View key={item.study_plan_day_id}>
-                                {renderDailyCard(item)}
+                        {todayPlans.length > 0 && (
+                            <View style={styles.sectionBadge}>
+                                <Text style={styles.sectionBadgeText}>{todayPlans.length}</Text>
                             </View>
-                        ))
-                    ) : (
-                        <View style={styles.emptyBox}>
-                            <Text style={styles.emptyText}>NENHUMA QUEST PARA HOJE</Text>
-                        </View>
+                        )}
+                    </TouchableOpacity>
+                    {expandedSections.today && (
+                        todayPlans.length > 0 ? (
+                            todayPlans.map((item) => (
+                                <View key={item.study_plan_day_id}>
+                                    {renderDailyCard(item)}
+                                </View>
+                            ))
+                        ) : (
+                            <View style={styles.emptyBox}>
+                                <Text style={styles.emptyText}>NENHUMA QUEST PARA HOJE</Text>
+                            </View>
+                        )
                     )}
                 </View>
 
                 {/* Planos de Estudo */}
                 <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
+                    <TouchableOpacity 
+                        style={styles.sectionHeader}
+                        onPress={() => toggleSection('plans')}
+                    >
+                        <Text style={styles.sectionIcon}>
+                            {expandedSections.plans ? '▼' : '►'}
+                        </Text>
                         <Text style={styles.sectionTitle}>📋 SEUS PLANOS</Text>
-                    </View>
-                    {studyPlans.map((item) => (
+                        {studyPlans.length > 0 && (
+                            <View style={styles.sectionBadge}>
+                                <Text style={styles.sectionBadgeText}>{studyPlans.length}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                    {expandedSections.plans && studyPlans.map((item) => (
                         <TouchableOpacity
                             key={item.study_plan_id}
                             style={styles.planCard}
@@ -516,11 +576,34 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         borderWidth: 3,
         borderColor: "#16213e",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    sectionIcon: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
+        color: "#3b82f6",
     },
     sectionTitle: {
         fontFamily: "PressStart2P-Regular",
         fontSize: 12,
         color: "#FFD700",
+        flex: 1,
+    },
+    sectionBadge: {
+        backgroundColor: "#e94560",
+        borderWidth: 2,
+        borderColor: "#c23854",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        minWidth: 28,
+        alignItems: "center",
+    },
+    sectionBadgeText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
+        color: "#fff",
     },
     // Card Styles
     card: {

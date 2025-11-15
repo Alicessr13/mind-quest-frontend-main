@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform, ActivityIndicator } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -28,6 +28,7 @@ export default function CreateStudyPlanScreen() {
     const [endDate, setEndDate] = useState(new Date());
     const [weekDaysSelected, setWeekDaysSelected] = useState<number[]>([]);
     const [minutesPerDay, setMinutesPerDay] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -59,6 +60,8 @@ export default function CreateStudyPlanScreen() {
             return Alert.alert("Erro", "Preencha todos os campos.");
         }
 
+        setIsLoading(true);
+
         try {
             const token = await AuthUtils.getToken();
             const item = await api.post(
@@ -79,6 +82,8 @@ export default function CreateStudyPlanScreen() {
         } catch (err) {
             console.error(err);
             Alert.alert("Erro", "Não foi possível criar o plano.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -102,6 +107,7 @@ export default function CreateStudyPlanScreen() {
                         placeholderTextColor="#64748b"
                         value={subject}
                         onChangeText={setSubject}
+                        editable={!isLoading}
                     />
                 </View>
             </View>
@@ -114,6 +120,7 @@ export default function CreateStudyPlanScreen() {
                 <TouchableOpacity 
                     style={styles.dateButton} 
                     onPress={() => setShowStartDatePicker(true)}
+                    disabled={isLoading}
                 >
                     <Text style={styles.dateIcon}>▶</Text>
                     <Text style={styles.dateText}>{formatDate(startDate)}</Text>
@@ -136,6 +143,7 @@ export default function CreateStudyPlanScreen() {
                 <TouchableOpacity 
                     style={styles.dateButton} 
                     onPress={() => setShowEndDatePicker(true)}
+                    disabled={isLoading}
                 >
                     <Text style={styles.dateIcon}>▶</Text>
                     <Text style={styles.dateText}>{formatDate(endDate)}</Text>
@@ -164,6 +172,7 @@ export default function CreateStudyPlanScreen() {
                                 weekDaysSelected.includes(day.value) && styles.weekDayButtonSelected,
                             ]}
                             onPress={() => toggleWeekDay(day.value)}
+                            disabled={isLoading}
                         >
                             <Text style={styles.weekDayEmoji}>{day.emoji}</Text>
                             <Text style={[
@@ -190,19 +199,35 @@ export default function CreateStudyPlanScreen() {
                         keyboardType="numeric"
                         value={minutesPerDay}
                         onChangeText={setMinutesPerDay}
+                        editable={!isLoading}
                     />
                 </View>
             </View>
 
             {/* Botões de Ação */}
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
-                    <Text style={styles.createButtonText}>✓ CRIAR QUEST</Text>
+                <TouchableOpacity 
+                    style={[
+                        styles.createButton,
+                        isLoading && styles.createButtonDisabled
+                    ]} 
+                    onPress={handleSubmit}
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#fff" />
+                            <Text style={styles.createButtonText}>CRIANDO...</Text>
+                        </View>
+                    ) : (
+                        <Text style={styles.createButtonText}>✓ CRIAR QUEST</Text>
+                    )}
                 </TouchableOpacity>
                 
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}
+                    disabled={isLoading}
                 >
                     <Text style={styles.backButtonText}>← VOLTAR</Text>
                 </TouchableOpacity>
@@ -339,6 +364,16 @@ const styles = StyleSheet.create({
         borderColor: "#059669",
         padding: 16,
         alignItems: "center",
+    },
+    createButtonDisabled: {
+        backgroundColor: "#064e3b",
+        borderColor: "#022c22",
+        opacity: 0.7,
+    },
+    loadingContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
     },
     createButtonText: {
         fontFamily: "PressStart2P-Regular",

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert } from "react-native";
 import axios from "axios";
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
@@ -41,6 +41,36 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
     const [loading, setLoading] = useState(true);
     const [expandedContent, setExpandedContent] = useState<string | null>(null);
     const navigation = useNavigation<NavigationProp>();
+
+    const handleDeletePlan = () => {
+        Alert.alert(
+            "⚠️ DELETAR PLANO",
+            "Tem certeza que deseja deletar este plano de estudos? Esta ação não pode ser desfeita!",
+            [
+                {
+                    text: "Cancelar",
+                    style: "cancel"
+                },
+                {
+                    text: "Deletar",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const token = await AuthUtils.getToken();
+                            await api.delete(`/study-plan/${id}`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                            });
+                            Alert.alert("Sucesso", "Plano deletado com sucesso!");
+                            navigation.goBack();
+                        } catch (err: any) {
+                            console.error("Erro ao deletar plano:", err);
+                            Alert.alert("Erro", err.response?.data?.message || "Não foi possível deletar o plano.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     useEffect(() => {
         const fetchPlan = async () => {
@@ -99,9 +129,15 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
+            {/* Header com botão deletar */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>📖 DETALHES DA QUEST</Text>
+                <TouchableOpacity
+                    style={styles.deleteButtonSmall}
+                    onPress={handleDeletePlan}
+                >
+                    <Text style={styles.deleteButtonSmallText}>🗑️</Text>
+                </TouchableOpacity>
             </View>
 
             <ScrollView>
@@ -305,14 +341,16 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-    // Header
+    // Header com botão deletar
     header: {
         backgroundColor: "#0f3460",
         padding: 16,
         marginBottom: 20,
         borderWidth: 4,
         borderColor: "#16213e",
+        flexDirection: "row",
         alignItems: "center",
+        justifyContent: "space-between",
     },
     headerTitle: {
         fontFamily: "PressStart2P-Regular",
@@ -321,6 +359,17 @@ const styles = StyleSheet.create({
         textShadowColor: "#000",
         textShadowOffset: { width: 2, height: 2 },
         textShadowRadius: 0,
+        flex: 1,
+    },
+    deleteButtonSmall: {
+        backgroundColor: "#e94560",
+        borderWidth: 3,
+        borderColor: "#c23854",
+        padding: 8,
+        marginLeft: 12,
+    },
+    deleteButtonSmallText: {
+        fontSize: 16,
     },
 
     // Plan Card

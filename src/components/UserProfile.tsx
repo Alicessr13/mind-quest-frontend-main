@@ -6,7 +6,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
 import { api } from "../api";
-
+import { baseUrl } from "../api";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
 
 export default function UserProfile() {
@@ -141,8 +141,7 @@ export default function UserProfile() {
                     <View style={styles.characterDisplay}>
                         {equippedItems.map((item: any, index: number) => (
                             <Image
-                                key={index}
-                                source={{ uri: item.image_url }}
+                                source={{ uri: `${baseUrl}${item.image_url}` }}
                                 style={styles.characterLayer}
                             />
                         ))}
@@ -199,7 +198,7 @@ export default function UserProfile() {
                             <View key={index} style={styles.inventoryItem}>
                                 <View style={styles.itemImageContainer}>
                                     <Image
-                                        source={{ uri: item.image_url }}
+                                        source={{ uri: `${baseUrl}${item.image_url}` }}
                                         style={styles.itemImage}
                                     />
                                     {isEquipped && (

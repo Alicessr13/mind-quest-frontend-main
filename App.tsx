@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator, StyleSheet, StatusBar } from "react-native";
 import { AuthUtils } from "./src/utils/auth";
 import LoginScreen from "./src/components/LoginScreen";
 import SignUpScreen from "./src/components/RegisterScreen";
@@ -84,6 +84,12 @@ export default function App() {
     }
 
     return (
+        <>
+        <StatusBar 
+            barStyle="light-content" 
+            backgroundColor="#1a1a2e" 
+            translucent={false}
+        />
         <NavigationContainer>
             <Stack.Navigator 
                 initialRouteName={isLoggedIn ? "Home" : "Login"}
@@ -101,6 +107,7 @@ export default function App() {
                 <Stack.Screen name="ShopScreen" component={ShopScreen} />
             </Stack.Navigator>
         </NavigationContainer>
+        </>
     );
 }
 

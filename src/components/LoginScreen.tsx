@@ -6,7 +6,7 @@ import {
     TouchableOpacity,
     StyleSheet,
     Alert,
-    ActivityIndicator
+    ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -15,6 +15,7 @@ import { RootStackParamList } from "../../App";
 import { AuthUtils } from "../utils/auth";
 import { api } from "../api";
 import LoginImage from "./img/LoginImage";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type LoginScreenProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
@@ -62,108 +63,109 @@ export default function LoginScreen() {
     };
 
     return (
-        <View style={styles.container}>
-            {/* Animated Background Border */}
-            <View style={styles.decorativeBorder}>
-                <Text style={styles.borderPattern}>████████████████████████████</Text>
-            </View>
-
-            {/* Logo/Title Box */}
-            <View style={styles.titleBox}>
-                <View style={styles.titleBorder}>
-                    <Text style={styles.title}>🎮 MIND QUEST 🎮</Text>
-                    <Text style={styles.subtitle}>ADVENTURE AWAITS!</Text>
-                </View>
-            </View>
-
-            {/* Login Image */}
-            {/* <View style={styles.imageContainer}>
-                <LoginImage />
-            </View> */}
-
-            {/* Login Form Box */}
-            <View style={styles.formBox}>
-                <View style={styles.formHeader}>
-                    <Text style={styles.formTitle}>▼ PLAYER LOGIN ▼</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
+                {/* Animated Background Border */}
+                <View style={styles.decorativeBorder}>
+                    <Text style={styles.borderPattern}>████████████████████████████</Text>
                 </View>
 
-                {/* Email Input */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>📧 EMAIL:</Text>
-                    <View style={styles.inputWrapper}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="DIGITE SEU EMAIL..."
-                            placeholderTextColor="#64748b"
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            editable={!loading}
-                        />
+                {/* Logo/Title Box */}
+                <View style={styles.titleBox}>
+                    <View style={styles.titleBorder}>
+                        <Text style={styles.title}>🎮 MIND QUEST 🎮</Text>
+                        <Text style={styles.subtitle}>ADVENTURE AWAITS!</Text>
                     </View>
                 </View>
 
-                {/* Password Input */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>🔒 SENHA:</Text>
-                    <View style={styles.inputWrapper}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="DIGITE SUA SENHA..."
-                            placeholderTextColor="#64748b"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            editable={!loading}
-                        />
+                {/* Login Form Box */}
+                <View style={styles.formBox}>
+                    <View style={styles.formHeader}>
+                        <Text style={styles.formTitle}>▼ PLAYER LOGIN ▼</Text>
                     </View>
-                </View>
 
-                {/* Login Button */}
-                <TouchableOpacity
-                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-                    onPress={handleLogin}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator color="#FFD700" />
-                            <Text style={styles.loadingText}>CONECTANDO...</Text>
+                    {/* Email Input */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>📧 EMAIL:</Text>
+                        <View style={styles.inputWrapper}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="DIGITE SEU EMAIL..."
+                                placeholderTextColor="#64748b"
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                editable={!loading}
+                            />
                         </View>
-                    ) : (
-                        <View style={styles.buttonContent}>
-                            <Text style={styles.buttonIcon}>▶</Text>
-                            <Text style={styles.loginButtonText}>INICIAR JOGO</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
+                    </View>
 
-                {/* Sign Up Link */}
-                <View style={styles.signupBox}>
-                    <Text style={styles.signupQuestion}>NOVO JOGADOR?</Text>
+                    {/* Password Input */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>🔒 SENHA:</Text>
+                        <View style={styles.inputWrapper}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="DIGITE SUA SENHA..."
+                                placeholderTextColor="#64748b"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                                editable={!loading}
+                            />
+                        </View>
+                    </View>
+
+                    {/* Login Button */}
                     <TouchableOpacity
-                        style={styles.signupButton}
-                        onPress={() => navigation.navigate("SignUp")}
+                        style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                        onPress={handleLogin}
                         disabled={loading}
                     >
-                        <Text style={styles.signupButtonText}>+ CRIAR CONTA</Text>
+                        {loading ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator color="#FFD700" />
+                                <Text style={styles.loadingText}>CONECTANDO...</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.buttonContent}>
+                                <Text style={styles.buttonIcon}>▶</Text>
+                                <Text style={styles.loginButtonText}>INICIAR JOGO</Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
+
+                    {/* Sign Up Link */}
+                    <View style={styles.signupBox}>
+                        <Text style={styles.signupQuestion}>NOVO JOGADOR?</Text>
+                        <TouchableOpacity
+                            style={styles.signupButton}
+                            onPress={() => navigation.navigate("SignUp")}
+                            disabled={loading}
+                        >
+                            <Text style={styles.signupButtonText}>+ CRIAR CONTA</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
 
-            {/* Bottom Decorative Border */}
-            <View style={styles.decorativeBorderBottom}>
-                <Text style={styles.borderPattern}>████████████████████████████</Text>
-            </View>
+                {/* Bottom Decorative Border */}
+                <View style={styles.decorativeBorderBottom}>
+                    <Text style={styles.borderPattern}>████████████████████████████</Text>
+                </View>
 
-            {/* Credits */}
-            <Text style={styles.credits}>© 2025 PIXEL STUDIOS</Text>
-        </View>
+                {/* Credits */}
+                <Text style={styles.credits}>© 2025 PIXEL STUDIOS</Text>
+            </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: "#1a1a2e",
+    },
     container: {
         flex: 1,
         padding: 20,
@@ -224,12 +226,6 @@ const styles = StyleSheet.create({
         fontSize: 8,
         color: "#3b82f6",
         textAlign: "center",
-    },
-
-    // Image Container
-    imageContainer: {
-        alignItems: "center",
-        marginBottom: 24,
     },
 
     // Form Box
