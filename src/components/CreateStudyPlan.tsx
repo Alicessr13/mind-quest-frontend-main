@@ -78,7 +78,6 @@ export default function CreateStudyPlanScreen() {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-            Alert.alert("Sucesso", "Plano de estudo criado!");
             navigation.navigate("StudyPlanDetails", { id: item.data });
         } catch (err) {
             console.error(err);

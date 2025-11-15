@@ -44,8 +44,6 @@ export default function LoginScreen() {
 
             await AuthUtils.saveToken(token);
 
-            Alert.alert("Sucesso", `Bem-vindo, ${name}!`);
-
             navigation.reset({
                 index: 0,
                 routes: [{ name: "Home" }]

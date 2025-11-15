@@ -293,7 +293,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             
-            Alert.alert("Parabéns!", "Progresso do estudo atualizado com sucesso!");
             navigation.goBack();
         } catch (err) {
             console.error("Erro ao atualizar progresso:", err);
@@ -400,21 +399,9 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
             <TouchableOpacity
                 style={styles.buttonBack}
                 onPress={() => {
-                    if (isRunning) {
-                        Alert.alert(
-                            "Timer ativo",
-                            "Há um timer rodando. Se você sair, o timer continuará em background.",
-                            [
-                                { text: "Continuar", style: "cancel" },
-                                { 
-                                    text: "Sair mesmo assim", 
-                                    onPress: () => navigation.goBack() 
-                                }
-                            ]
-                        );
-                    } else {
-                        navigation.goBack();
-                    }
+                    
+                    navigation.goBack();
+                    
                 }}>
                 <Text style={styles.buttonText}>← VOLTAR</Text>
             </TouchableOpacity>

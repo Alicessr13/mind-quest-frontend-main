@@ -45,7 +45,6 @@ export default function UserProfile() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setUser(res.data);
-            Alert.alert("Sucesso", "Item equipado!");
         } catch (err: any) {
             console.error(err);
             Alert.alert("Erro", err.response?.data?.message || "Não foi possível equipar o item.");
@@ -61,7 +60,6 @@ export default function UserProfile() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setUser(res.data);
-            Alert.alert("Sucesso", "Item desequipado!");
         } catch (err: any) {
             console.error(err);
             Alert.alert("Erro", err.response?.data?.message || "Não foi possível desequipar o item.");

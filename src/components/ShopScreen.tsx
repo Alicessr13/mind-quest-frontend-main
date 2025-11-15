@@ -69,7 +69,6 @@ export default function ShopScreen() {
             );
 
             setUser(res.data);
-            Alert.alert("Sucesso", `Você comprou ${item.name}!`);
             // Atualiza a lista de itens
             fetchData();
         } catch (err: any) {
