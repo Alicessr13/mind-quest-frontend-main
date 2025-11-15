@@ -7,6 +7,7 @@ import { RootStackParamList } from "../../App";
 import axios from "axios";
 import { AuthUtils } from "../utils/auth";
 import { api } from "../api";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "CreateStudyPlan">;
 
@@ -88,6 +89,7 @@ export default function CreateStudyPlanScreen() {
     };
 
     return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
         <ScrollView contentContainerStyle={styles.container}>
             {/* Header */}
             <View style={styles.header}>
@@ -239,6 +241,7 @@ export default function CreateStudyPlanScreen() {
                 <Text style={styles.footerIcon}>🎯</Text>
             </View>
         </ScrollView>
+        </SafeAreaView>
     );
 }
 

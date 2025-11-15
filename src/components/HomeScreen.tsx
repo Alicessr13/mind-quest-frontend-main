@@ -229,6 +229,7 @@ export default function HomeScreen() {
     }
 
     return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
         <View style={styles.container}>
             {/* Header Pixel Art */}
             {user && (
@@ -430,6 +431,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
             </ScrollView>
         </View>
+        </SafeAreaView>
     );
 }
 

@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { api } from "../api";
 import RegisterImage from "./img/RegisterImage";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type SignUpScreenProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
@@ -38,6 +39,7 @@ export default function SignUpScreen() {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         {/* Decorative Top Border */}
@@ -153,6 +155,7 @@ export default function SignUpScreen() {
         <Text style={styles.credits}>© 2025 PIXEL STUDIOS</Text>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 

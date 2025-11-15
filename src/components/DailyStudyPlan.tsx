@@ -6,6 +6,7 @@ import { AppStateStatus } from 'react-native';
 import { AuthUtils } from "../utils/auth";
 import { TimerManager, ActiveTimer } from "../utils/timerManager";
 import { api } from "../api";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface DailyPlan {
     study_plan_day_id: string;
@@ -323,6 +324,7 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
     };
 
     return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
@@ -422,6 +424,7 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                 <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
             </View>
         </View>
+        </SafeAreaView>
     );
 }
 

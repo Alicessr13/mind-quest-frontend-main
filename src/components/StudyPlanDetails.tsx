@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { AuthUtils } from "../utils/auth";
 import { api } from "../api";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StudyPlanDetails">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "StudyPlanDetails">;
@@ -128,6 +129,7 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
     };
 
     return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
         <View style={styles.container}>
             {/* Header com botão deletar */}
             <View style={styles.header}>
@@ -291,6 +293,7 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
                 </View>
             </ScrollView>
         </View>
+        </SafeAreaView>
     );
 }
 

@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
 import { api } from "../api";
 import { baseUrl } from "../api";
+import { SafeAreaView } from "react-native-safe-area-context";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
 
 export default function UserProfile() {
@@ -101,6 +102,7 @@ export default function UserProfile() {
     ].filter(Boolean);
 
     return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
@@ -246,6 +248,7 @@ export default function UserProfile() {
                 </View>
             </ScrollView>
         </View>
+        </SafeAreaView>
     );
 }
 

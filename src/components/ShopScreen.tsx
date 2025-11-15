@@ -8,6 +8,7 @@ import { RootStackParamList } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { api } from "../api";
 import { baseUrl } from "../api";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "ShopScreen">;
 
@@ -97,6 +98,7 @@ export default function ShopScreen() {
     );
 
     return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
@@ -212,6 +214,7 @@ export default function ShopScreen() {
                 <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
             </View>
         </View>
+        </SafeAreaView>
     );
 }
 
