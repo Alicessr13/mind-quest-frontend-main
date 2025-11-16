@@ -101,50 +101,52 @@ export default function UserProfile() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>👤 PERFIL DO JOGADOR</Text>
-            </View>
+            <View style={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>👤 PERFIL DO JOGADOR</Text>
+                </View>
 
-            <ScrollView>
-                {/* Player Info Card */}
-                <View style={styles.playerCard}>
-                    <View style={styles.playerHeader}>
-                        <Text style={styles.playerIcon}>🎮</Text>
-                        <View style={styles.playerInfo}>
-                            <Text style={styles.playerName}>{user.name}</Text>
-                            <View style={styles.pointsContainer}>
-                                <Text style={styles.pointsLabel}>PONTOS:</Text>
-                                <Text style={styles.pointsValue}>{user.points}</Text>
-                                <Text style={styles.pointsCoin}>💰</Text>
+                <ScrollView>
+                    {/* Player Info Card */}
+                    <View style={styles.playerCard}>
+                        <View style={styles.playerHeader}>
+                            <Text style={styles.playerIcon}>🎮</Text>
+                            <View style={styles.playerInfo}>
+                                <Text style={styles.playerName}>{user.name}</Text>
+                                <View style={styles.pointsContainer}>
+                                    <Text style={styles.pointsLabel}>PONTOS:</Text>
+                                    <Text style={styles.pointsValue}>{user.points}</Text>
+                                    <Text style={styles.pointsCoin}>💰</Text>
+                                </View>
                             </View>
                         </View>
                     </View>
-                </View>
 
-                {/* Shop Button */}
-                <TouchableOpacity
-                    style={styles.shopButton}
-                    onPress={() => navigation.navigate("ShopScreen")}
-                >
-                    <Text style={styles.shopButtonIcon}>🛒</Text>
-                    <Text style={styles.shopButtonText}>IR PARA A LOJA</Text>
-                </TouchableOpacity>
+                    {/* Shop Button */}
+                    <TouchableOpacity
+                        style={styles.shopButton}
+                        onPress={() => navigation.navigate("ShopScreen")}
+                    >
+                        <Text style={styles.shopButtonIcon}>🛒</Text>
+                        <Text style={styles.shopButtonText}>IR PARA A LOJA</Text>
+                    </TouchableOpacity>
 
-                {/* Character Section */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>⚔️ SEU PERSONAGEM</Text>
-                </View>
+                    {/* Character Section */}
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>⚔️ SEU PERSONAGEM</Text>
+                    </View>
 
-                <View style={styles.characterContainer}>
-                    <View style={styles.characterDisplay}>
-                        {equippedItems.map((item: any, index: number) => (
-                            <Image
-                                source={{ uri: `${baseUrl}${item.image_url}` }}
-                                style={styles.characterLayer}
-                            />
-                        ))}
+                    <View style={styles.characterContainer}>
+                        <View style={styles.characterDisplay}>
+                            {equippedItems.map((item: any, index: number) => (
+                                <Image
+                                    key={`character-layer-${item.item_id}-${index}`}
+                                    source={{ uri: `${baseUrl}${item.image_url}` }}
+                                    style={styles.characterLayer}
+                                />
+                            ))}
+                        </View>
                     </View>
 
                     {/* Equipped Items List */}
@@ -154,7 +156,7 @@ export default function UserProfile() {
                                 item.name === "Default Body" || item.name === "Default Face";
 
                             return (
-                                <View key={index} style={styles.equippedItem}>
+                                <View key={`equipped-${item.item_id}-${index}`} style={styles.equippedItem}>
                                     <View style={styles.equippedItemInfo}>
                                         <Text style={styles.equippedItemIcon}>✓</Text>
                                         <Text style={styles.equippedItemName}>{item.name}</Text>
@@ -171,81 +173,80 @@ export default function UserProfile() {
                             );
                         })}
                     </View>
-                </View>
 
-                {/* Inventory Section */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>🎒 INVENTÁRIO</Text>
-                </View>
+                    {/* Inventory Section */}
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>🎒 INVENTÁRIO</Text>
+                    </View>
 
-                <View style={styles.inventoryGrid}>
-                    {user.Inventory.map((inv: any, index: number) => {
-                        const item = inv.item;
-                        const isEquipped =
-                            user.item_body?.item_id === item.item_id ||
-                            user.item_face?.item_id === item.item_id ||
-                            user.item_skin_top?.item_id === item.item_id ||
-                            user.item_skin_bottom?.item_id === item.item_id ||
-                            user.item_shoes?.item_id === item.item_id ||
-                            user.item_hair?.item_id === item.item_id ||
-                            user.item_accessory?.item_id === item.item_id ||
-                            user.item_hand_accessory?.item_id === item.item_id;
+                    <View style={styles.inventoryGrid}>
+                        {user.Inventory.map((inv: any, index: number) => {
+                            const item = inv.item;
+                            const isEquipped =
+                                user.item_body?.item_id === item.item_id ||
+                                user.item_face?.item_id === item.item_id ||
+                                user.item_skin_top?.item_id === item.item_id ||
+                                user.item_skin_bottom?.item_id === item.item_id ||
+                                user.item_shoes?.item_id === item.item_id ||
+                                user.item_hair?.item_id === item.item_id ||
+                                user.item_accessory?.item_id === item.item_id ||
+                                user.item_hand_accessory?.item_id === item.item_id;
 
-                        const isDefault =
-                            item.name === "Default Body" || item.name === "Default Face";
+                            const isDefault =
+                                item.name === "Default Body" || item.name === "Default Face";
 
-                        return (
-                            <View key={index} style={styles.inventoryItem}>
-                                <View style={styles.itemImageContainer}>
-                                    <Image
-                                        source={{ uri: `${baseUrl}${item.image_url}` }}
-                                        style={styles.itemImage}
-                                    />
-                                    {isEquipped && (
-                                        <View style={styles.equippedBadge}>
-                                            <Text style={styles.equippedBadgeText}>E</Text>
-                                        </View>
+                            return (
+                                <View key={`inventory-${inv.inventory_id || item.item_id}-${index}`} style={styles.inventoryItem}>
+                                    <View style={styles.itemImageContainer}>
+                                        <Image
+                                            source={{ uri: `${baseUrl}${item.image_url}` }}
+                                            style={styles.itemImage}
+                                        />
+                                        {isEquipped && (
+                                            <View style={styles.equippedBadge}>
+                                                <Text style={styles.equippedBadgeText}>E</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={styles.itemName} numberOfLines={2}>
+                                        {item.name}
+                                    </Text>
+                                    {!isDefault && (
+                                        isEquipped ? (
+                                            <TouchableOpacity
+                                                style={styles.itemButtonUnequip}
+                                                onPress={() => handleUnequip(item.slot)}
+                                            >
+                                                <Text style={styles.itemButtonText}>REMOVER</Text>
+                                            </TouchableOpacity>
+                                        ) : (
+                                            <TouchableOpacity
+                                                style={styles.itemButtonEquip}
+                                                onPress={() => handleEquip(item.item_id)}
+                                            >
+                                                <Text style={styles.itemButtonText}>EQUIPAR</Text>
+                                            </TouchableOpacity>
+                                        )
                                     )}
                                 </View>
-                                <Text style={styles.itemName} numberOfLines={2}>
-                                    {item.name}
-                                </Text>
-                                {!isDefault && (
-                                    isEquipped ? (
-                                        <TouchableOpacity
-                                            style={styles.itemButtonUnequip}
-                                            onPress={() => handleUnequip(item.slot)}
-                                        >
-                                            <Text style={styles.itemButtonText}>REMOVER</Text>
-                                        </TouchableOpacity>
-                                    ) : (
-                                        <TouchableOpacity
-                                            style={styles.itemButtonEquip}
-                                            onPress={() => handleEquip(item.item_id)}
-                                        >
-                                            <Text style={styles.itemButtonText}>EQUIPAR</Text>
-                                        </TouchableOpacity>
-                                    )
-                                )}
-                            </View>
-                        );
-                    })}
-                </View>
+                            );
+                        })}
+                    </View>
 
-                {/* Back Button */}
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => navigation.goBack()}
-                >
-                    <Text style={styles.backButtonText}>← VOLTAR</Text>
-                </TouchableOpacity>
+                    {/* Back Button */}
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Text style={styles.backButtonText}>← VOLTAR</Text>
+                    </TouchableOpacity>
 
-                {/* Footer */}
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
-                </View>
-            </ScrollView>
-        </View>
+                    {/* Footer */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
+                    </View>
+                </ScrollView>
+            </View>
         </SafeAreaView>
     );
 }
