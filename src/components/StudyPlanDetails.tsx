@@ -23,6 +23,7 @@ interface Content {
         status: string;
         allocated_minutes: number;
         studied_minutes: number;
+        description: string;
     }[];
 }
 
@@ -130,169 +131,185 @@ export default function StudyPlanDetailsScreen({ route }: Props) {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
-        <View style={styles.container}>
-            {/* Header com botão deletar */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>📖 DETALHES DA QUEST</Text>
-                <TouchableOpacity
-                    style={styles.deleteButtonSmall}
-                    onPress={handleDeletePlan}
-                >
-                    <Text style={styles.deleteButtonSmallText}>🗑️</Text>
-                </TouchableOpacity>
-            </View>
-
-            <ScrollView>
-                {/* Plan Info Card */}
-                <View style={styles.planCard}>
-                    <View style={styles.planHeader}>
-                        <Text style={styles.planIcon}>🎯</Text>
-                        <Text style={styles.planTitle}>{plan.subject}</Text>
-                    </View>
-                    
-                    <View style={styles.divider} />
-                    
-                    <View style={styles.planStats}>
-                        <View style={styles.planStatRow}>
-                            <Text style={styles.statLabel}>📅 PERÍODO:</Text>
-                            <Text style={styles.statValue}>
-                                {new Date(plan.start_date).toLocaleDateString()} → {new Date(plan.end_date).toLocaleDateString()}
-                            </Text>
-                        </View>
-                        
-                        <View style={styles.planStatRow}>
-                            <Text style={styles.statLabel}>⏱️ TOTAL:</Text>
-                            <Text style={styles.statValue}>{plan.total_minutes} MIN</Text>
-                        </View>
-                        
-                        <View style={styles.planStatRow}>
-                            <Text style={styles.statLabel}>📊 POR DIA:</Text>
-                            <Text style={styles.statValue}>{plan.minutes_per_day} MIN</Text>
-                        </View>
-                    </View>
-
-                    {/* Progress Bar */}
-                    <View style={styles.progressContainer}>
-                        <Text style={styles.progressLabel}>PROGRESSO GERAL</Text>
-                        <View style={styles.progressBarOuter}>
-                            <View 
-                                style={[
-                                    styles.progressBarInner, 
-                                    { width: `${calculateProgress()}%` }
-                                ]} 
-                            />
-                        </View>
-                        <Text style={styles.progressPercentage}>{calculateProgress()}%</Text>
-                    </View>
+            <View style={styles.container}>
+                {/* Header com botão deletar */}
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>📖 DETALHES DA QUEST</Text>
+                    <TouchableOpacity
+                        style={styles.deleteButtonSmall}
+                        onPress={handleDeletePlan}
+                    >
+                        <Text style={styles.deleteButtonSmallText}>🗑️</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Contents Section */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>📚 CONTEÚDOS</Text>
-                </View>
+                <ScrollView>
+                    {/* Plan Info Card */}
+                    <View style={styles.planCard}>
+                        <View style={styles.planHeader}>
+                            <Text style={styles.planIcon}>🎯</Text>
+                            <Text style={styles.planTitle}>{plan.subject}</Text>
+                        </View>
 
-                {plan.Content.length > 0 ? (
-                    <FlatList
-                        data={plan.Content}
-                        scrollEnabled={false}
-                        keyExtractor={(item) => item.content_id}
-                        renderItem={({ item }) => {
-                            const isExpanded = expandedContent === item.content_id.toString();
-                            const contentProgress = item.allocated_minutes > 0 
-                                ? Math.floor((item.studied_minutes / item.allocated_minutes) * 100)
-                                : 0;
+                        <View style={styles.divider} />
 
-                            return (
-                                <View style={styles.contentCard}>
-                                    <TouchableOpacity
-                                        onPress={() =>
-                                            setExpandedContent(
-                                                isExpanded ? null : item.content_id.toString()
-                                            )
-                                        }
-                                    >
-                                        <View style={styles.contentHeader}>
-                                            <Text style={styles.expandIcon}>
-                                                {isExpanded ? "▼" : "►"}
-                                            </Text>
-                                            <View style={styles.contentInfo}>
-                                                <Text style={styles.contentTitle}>{item.subject}</Text>
-                                                <View style={styles.contentStats}>
-                                                    <Text style={styles.contentStatus}>
-                                                        STATUS: {item.status.toUpperCase()}
-                                                    </Text>
-                                                    <Text style={styles.contentTime}>
-                                                        {item.studied_minutes}/{item.allocated_minutes} MIN
-                                                    </Text>
-                                                </View>
-                                                
-                                                {/* Mini Progress Bar */}
-                                                <View style={styles.miniProgressBar}>
-                                                    <View 
-                                                        style={[
-                                                            styles.miniProgressFill, 
-                                                            { width: `${contentProgress}%` }
-                                                        ]} 
-                                                    />
-                                                </View>
-                                            </View>
-                                        </View>
-                                    </TouchableOpacity>
+                        <View style={styles.planStats}>
+                            <View style={styles.planStatRow}>
+                                <Text style={styles.statLabel}>📅 PERÍODO:</Text>
+                                <Text style={styles.statValue}>
+                                    {new Date(plan.start_date).toLocaleDateString()} → {new Date(plan.end_date).toLocaleDateString()}
+                                </Text>
+                            </View>
 
-                                    {/* Expanded Days List */}
-                                    {isExpanded && (
-                                        <View style={styles.daysContainer}>
-                                            <View style={styles.daysHeader}>
-                                                <Text style={styles.daysHeaderText}>
-                                                    ▼ DIAS DE ESTUDO
+                            <View style={styles.planStatRow}>
+                                <Text style={styles.statLabel}>⏱️ TOTAL:</Text>
+                                <Text style={styles.statValue}>{plan.total_minutes} MIN</Text>
+                            </View>
+
+                            <View style={styles.planStatRow}>
+                                <Text style={styles.statLabel}>📊 POR DIA:</Text>
+                                <Text style={styles.statValue}>{plan.minutes_per_day} MIN</Text>
+                            </View>
+                        </View>
+
+                        {/* Progress Bar */}
+                        <View style={styles.progressContainer}>
+                            <Text style={styles.progressLabel}>PROGRESSO GERAL</Text>
+                            <View style={styles.progressBarOuter}>
+                                <View
+                                    style={[
+                                        styles.progressBarInner,
+                                        { width: `${calculateProgress()}%` }
+                                    ]}
+                                />
+                            </View>
+                            <Text style={styles.progressPercentage}>{calculateProgress()}%</Text>
+                        </View>
+                    </View>
+
+                    {/* Contents Section */}
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>📚 CONTEÚDOS</Text>
+                    </View>
+
+                    {plan.Content.length > 0 ? (
+                        <FlatList
+                            data={plan.Content}
+                            scrollEnabled={false}
+                            keyExtractor={(item) => item.content_id}
+                            renderItem={({ item }) => {
+                                const isExpanded = expandedContent === item.content_id.toString();
+                                const contentProgress = item.allocated_minutes > 0
+                                    ? Math.floor((item.studied_minutes / item.allocated_minutes) * 100)
+                                    : 0;
+
+                                return (
+                                    <View style={styles.contentCard}>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                setExpandedContent(
+                                                    isExpanded ? null : item.content_id.toString()
+                                                )
+                                            }
+                                        >
+                                            <View style={styles.contentHeader}>
+                                                <Text style={styles.expandIcon}>
+                                                    {isExpanded ? "▼" : "►"}
                                                 </Text>
-                                            </View>
-                                            {item.study_plan_day.map((day) => (
-                                                <View key={day.study_plan_day_id} style={styles.dayItem}>
-                                                    <View style={styles.dayLeft}>
-                                                        <Text style={styles.dayIcon}>
-                                                            {day.status === 'completed' ? '✓' : '○'}
+                                                <View style={styles.contentInfo}>
+                                                    <Text style={styles.contentTitle}>{item.subject}</Text>
+                                                    <View style={styles.contentStats}>
+                                                        <Text style={styles.contentStatus}>
+                                                            STATUS: {item.status.toUpperCase()}
                                                         </Text>
-                                                        <View>
-                                                            <Text style={styles.dayDate}>
-                                                                {new Date(day.date).toLocaleDateString()}
-                                                            </Text>
-                                                            <Text style={styles.dayStatus}>
-                                                                {day.status.toUpperCase()}
-                                                            </Text>
-                                                        </View>
+                                                        <Text style={styles.contentTime}>
+                                                            {item.studied_minutes}/{item.allocated_minutes} MIN
+                                                        </Text>
                                                     </View>
-                                                    <Text style={styles.dayTime}>
-                                                        {day.studied_minutes}/{day.allocated_minutes} MIN
+
+                                                    {/* Mini Progress Bar */}
+                                                    <View style={styles.miniProgressBar}>
+                                                        <View
+                                                            style={[
+                                                                styles.miniProgressFill,
+                                                                { width: `${contentProgress}%` }
+                                                            ]}
+                                                        />
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        </TouchableOpacity>
+
+                                        {/* Expanded Days List */}
+                                        {isExpanded && (
+                                            <View style={styles.daysContainer}>
+                                                <View style={styles.daysHeader}>
+                                                    <Text style={styles.daysHeaderText}>
+                                                        ▼ DIAS DE ESTUDO
                                                     </Text>
                                                 </View>
-                                            ))}
-                                        </View>
-                                    )}
-                                </View>
-                            );
-                        }}
-                    />
-                ) : (
-                    <View style={styles.emptyBox}>
-                        <Text style={styles.emptyText}>NENHUM CONTEÚDO CADASTRADO</Text>
+                                                {item.study_plan_day.map((day) => (
+                                                    <View key={day.study_plan_day_id} style={styles.dayItem}>
+                                                        <View style={styles.dayLeft}>
+                                                            <Text style={styles.dayIcon}>
+                                                                {day.status === 'completed' ? '✓' : '○'}
+                                                            </Text>
+                                                            <View>
+                                                                <Text style={styles.dayDate}>
+                                                                    {new Date(day.date).toLocaleDateString()}
+                                                                </Text>
+                                                                <Text style={styles.dayStatus}>
+                                                                    {day.status.toUpperCase()}
+                                                                </Text>
+                                                                {day.description && (
+                                                                    <TouchableOpacity
+                                                                        style={styles.viewDescriptionBtn}
+                                                                        onPress={() => {
+                                                                            Alert.alert(
+                                                                                "📋 Plano do Dia",
+                                                                                day.description,
+                                                                                [{ text: "OK" }]
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Text style={styles.viewDescriptionText}>
+                                                                            Ver descrição
+                                                                        </Text>
+                                                                    </TouchableOpacity>
+                                                                )}
+                                                            </View>
+                                                        </View>
+                                                        <Text style={styles.dayTime}>
+                                                            {day.studied_minutes}/{day.allocated_minutes} MIN
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            }}
+                        />
+                    ) : (
+                        <View style={styles.emptyBox}>
+                            <Text style={styles.emptyText}>NENHUM CONTEÚDO CADASTRADO</Text>
+                        </View>
+                    )}
+
+                    {/* Back Button */}
+                    <TouchableOpacity
+                        style={styles.backButtonBottom}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Text style={styles.backButtonText}>← VOLTAR</Text>
+                    </TouchableOpacity>
+
+                    {/* Footer */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
                     </View>
-                )}
-
-                {/* Back Button */}
-                <TouchableOpacity
-                    style={styles.backButtonBottom}
-                    onPress={() => navigation.goBack()}
-                >
-                    <Text style={styles.backButtonText}>← VOLTAR</Text>
-                </TouchableOpacity>
-
-                {/* Footer */}
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
-                </View>
-            </ScrollView>
-        </View>
+                </ScrollView>
+            </View>
         </SafeAreaView>
     );
 }
@@ -625,5 +642,23 @@ const styles = StyleSheet.create({
         fontFamily: "PressStart2P-Regular",
         fontSize: 8,
         color: "#0f3460",
+    },
+
+
+    dayInfo: {
+        flex: 1,
+    },
+    viewDescriptionBtn: {
+        backgroundColor: "#10b981",
+        borderWidth: 2,
+        borderColor: "#059669",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        marginTop: 4,
+    },
+    viewDescriptionText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 6,
+        color: "#fff",
     },
 });

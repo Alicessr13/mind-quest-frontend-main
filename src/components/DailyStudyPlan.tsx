@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert, AppState } from "react-native";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, AppState, ScrollView } from "react-native";
 import { AppStateStatus } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthUtils } from "../utils/auth";
 import { TimerManager, ActiveTimer } from "../utils/timerManager";
 import { api } from "../api";
@@ -16,6 +15,7 @@ interface DailyPlan {
     allocated_minutes: number;
     studied_minutes: number;
     status: string;
+    description?: string;
 }
 
 interface Props {
@@ -31,24 +31,13 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         const totalSeconds = day.allocated_minutes * 60;
         const completeMinutesStudied = Math.floor(day.studied_minutes);
         const studiedSeconds = completeMinutesStudied * 60;
-        const remaining = Math.max(0, totalSeconds - studiedSeconds);
-        
-        console.log('Cálculo inicial:', {
-            totalMinutes: day.allocated_minutes,
-            studiedMinutesFromAPI: day.studied_minutes,
-            completeMinutesStudied,
-            totalSeconds,
-            studiedSeconds,
-            remainingSeconds: remaining,
-            displayTime: Math.floor(remaining / 60) + ':' + String(remaining % 60).padStart(2, '0')
-        });
-        
-        return remaining;
+        return Math.max(0, totalSeconds - studiedSeconds);
     };
 
     const [remainingSeconds, setRemainingSeconds] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [initialSeconds, setInitialSeconds] = useState(0);
+    const [showDescription, setShowDescription] = useState(true); // COMEÇA ABERTO
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const appState = useRef(AppState.currentState);
 
@@ -59,7 +48,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
     useEffect(() => {
         const handleAppStateChange = (nextAppState: AppStateStatus) => {
             if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-                console.log('App voltou ao foco');
                 checkExistingTimer();
             }
             appState.current = nextAppState;
@@ -119,13 +107,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
                     const currentTime = Date.now();
                     const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
                     const newRemainingSeconds = Math.max(0, savedInitialSeconds - elapsedSeconds);
-                    
-                    console.log('Timer encontrado em background:', {
-                        startTime: new Date(startTime).toLocaleTimeString(),
-                        elapsedSeconds,
-                        savedInitialSeconds,
-                        newRemainingSeconds
-                    });
 
                     setInitialSeconds(savedInitialSeconds);
                     setRemainingSeconds(newRemainingSeconds);
@@ -218,11 +199,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
             setInitialSeconds(currentInitialSeconds);
             startVisualTimer();
             
-            console.log('Timer iniciado:', {
-                startTime: new Date(startTime).toLocaleTimeString(),
-                initialSeconds: currentInitialSeconds
-            });
-            
         } catch (error) {
             console.error('Erro ao iniciar timer:', error);
         }
@@ -244,13 +220,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
             
             const secondsStudiedInThisSession = initialSeconds - remainingSeconds;
             const completeMinutesStudiedInThisSession = Math.floor(secondsStudiedInThisSession / 60);
-            
-            console.log('Parando timer:', {
-                initialSeconds,
-                remainingSeconds,
-                secondsStudiedInThisSession,
-                completeMinutesStudiedInThisSession
-            });
             
             if (completeMinutesStudiedInThisSession > 0) {
                 await finishStudy(completeMinutesStudiedInThisSession);
@@ -282,11 +251,6 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         try {
             const token = await AuthUtils.getToken();
 
-            console.log('Enviando para API:', {
-                minutesStudiedInThisSession,
-                dayId: day.study_plan_day_id
-            });
-
             await api.patch(
                 `/study-plan-day/${day.study_plan_day_id}/progress`,
                 { studied_minutes: minutesStudiedInThisSession },
@@ -301,11 +265,48 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
     };
 
     const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60)
-            .toString()
-            .padStart(2, "0");
+        const m = Math.floor(seconds / 60).toString().padStart(2, "0");
         const s = (seconds % 60).toString().padStart(2, "0");
         return `${m}:${s}`;
+    };
+
+    const calculateProgress = () => {
+        if (initialSeconds === 0) return 0;
+        return ((initialSeconds - remainingSeconds) / initialSeconds) * 100;
+    };
+
+    // Formatar descrição para exibição
+    const renderDescription = () => {
+        if (!day.description) return null;
+
+        return (
+            <View style={styles.descriptionCard}>
+                <TouchableOpacity
+                    style={styles.descriptionHeader}
+                    onPress={() => setShowDescription(!showDescription)}
+                >
+                    <Text style={styles.descriptionIcon}>
+                        {showDescription ? "▼" : "►"}
+                    </Text>
+                    <Text style={styles.descriptionHeaderText}>
+                        📋 O QUE ESTUDAR HOJE
+                    </Text>
+                </TouchableOpacity>
+
+                {showDescription && (
+                    <View style={styles.descriptionContentWrapper}>
+                        <ScrollView 
+                            style={styles.descriptionContent}
+                            nestedScrollEnabled={true}
+                            showsVerticalScrollIndicator={true}
+                            persistentScrollbar={true}
+                        >
+                            <Text style={styles.descriptionText}>{day.description}</Text>
+                        </ScrollView>
+                    </View>
+                )}
+            </View>
+        );
     };
 
     useEffect(() => {
@@ -316,111 +317,111 @@ export default function DailyStudyScreen({ route, navigation }: Props) {
         };
     }, []);
 
-    // Calcula a porcentagem de progresso
-    const calculateProgress = () => {
-        if (initialSeconds === 0) return 0;
-        return ((initialSeconds - remainingSeconds) / initialSeconds) * 100;
-    };
-
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>⚔️ QUEST ATIVA</Text>
-            </View>
+            <ScrollView 
+                style={styles.scrollContainer}
+                showsVerticalScrollIndicator={true}
+            >
+                <View style={styles.container}>
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <Text style={styles.headerTitle}>⚔️ QUEST ATIVA</Text>
+                    </View>
 
-            {/* Subject Card */}
-            <View style={styles.subjectCard}>
-                <Text style={styles.subjectIcon}>📚</Text>
-                <Text style={styles.subjectTitle}>{day.content.subject}</Text>
-            </View>
+                    {/* Subject Card */}
+                    <View style={styles.subjectCard}>
+                        <Text style={styles.subjectIcon}>📚</Text>
+                        <Text style={styles.subjectTitle}>{day.content.subject}</Text>
+                    </View>
 
-            {/* Stats Panel */}
-            <View style={styles.statsPanel}>
-                <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>ALOCADO</Text>
-                    <Text style={styles.statValue}>{day.allocated_minutes} MIN</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>ESTUDADO</Text>
-                    <Text style={styles.statValue}>{Math.floor(day.studied_minutes)} MIN</Text>
-                </View>
-            </View>
+                    {/* NOVA SEÇÃO: Descrição do que estudar */}
+                    {renderDescription()}
 
-            {/* Timer Display */}
-            <View style={styles.timerContainer}>
-                <View style={styles.timerBorder}>
-                    <View style={styles.timerInner}>
-                        <Text style={styles.timerLabel}>TEMPO RESTANTE</Text>
-                        <Text style={styles.timerDisplay}>{formatTime(remainingSeconds)}</Text>
-                        
-                        {/* Progress Bar */}
-                        <View style={styles.progressBarContainer}>
-                            <View 
-                                style={[
-                                    styles.progressBar, 
-                                    { width: `${calculateProgress()}%` }
-                                ]} 
-                            />
+                    {/* Stats Panel */}
+                    <View style={styles.statsPanel}>
+                        <View style={styles.statBox}>
+                            <Text style={styles.statLabel}>ALOCADO</Text>
+                            <Text style={styles.statValue}>{day.allocated_minutes} MIN</Text>
                         </View>
-                        <Text style={styles.progressText}>
-                            {Math.floor(calculateProgress())}% COMPLETO
-                        </Text>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statBox}>
+                            <Text style={styles.statLabel}>ESTUDADO</Text>
+                            <Text style={styles.statValue}>{Math.floor(day.studied_minutes)} MIN</Text>
+                        </View>
+                    </View>
+
+                    {/* Timer Display */}
+                    <View style={styles.timerContainer}>
+                        <View style={styles.timerBorder}>
+                            <View style={styles.timerInner}>
+                                <Text style={styles.timerLabel}>TEMPO RESTANTE</Text>
+                                <Text style={styles.timerDisplay}>{formatTime(remainingSeconds)}</Text>
+                                
+                                {/* Progress Bar */}
+                                <View style={styles.progressBarContainer}>
+                                    <View 
+                                        style={[
+                                            styles.progressBar, 
+                                            { width: `${calculateProgress()}%` }
+                                        ]} 
+                                    />
+                                </View>
+                                <Text style={styles.progressText}>
+                                    {Math.floor(calculateProgress())}% COMPLETO
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Status Indicator */}
+                    {isRunning && (
+                        <View style={styles.statusBanner}>
+                            <Text style={styles.statusIcon}>⏰</Text>
+                            <Text style={styles.statusText}>RODANDO EM BACKGROUND</Text>
+                        </View>
+                    )}
+
+                    {/* Action Buttons */}
+                    <View style={styles.buttonContainer}>
+                        {!isRunning ? (
+                            <TouchableOpacity style={styles.buttonStart} onPress={startTimer}>
+                                <Text style={styles.buttonIcon}>▶</Text>
+                                <Text style={styles.buttonText}>INICIAR</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={styles.buttonStop} onPress={stopTimer}>
+                                <Text style={styles.buttonIcon}>■</Text>
+                                <Text style={styles.buttonText}>PARAR</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {/* Back Button */}
+                    <TouchableOpacity
+                        style={styles.buttonBack}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Text style={styles.buttonText}>← VOLTAR</Text>
+                    </TouchableOpacity>
+
+                    {/* Footer Decoration */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
                     </View>
                 </View>
-            </View>
-
-            {/* Status Indicator */}
-            {isRunning && (
-                <View style={styles.statusBanner}>
-                    <Text style={styles.statusIcon}>⏰</Text>
-                    <Text style={styles.statusText}>RODANDO EM BACKGROUND</Text>
-                </View>
-            )}
-
-            {/* Action Buttons */}
-            <View style={styles.buttonContainer}>
-                {!isRunning ? (
-                    <TouchableOpacity style={styles.buttonStart} onPress={startTimer}>
-                        <Text style={styles.buttonIcon}>▶</Text>
-                        <Text style={styles.buttonText}>INICIAR</Text>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity style={styles.buttonStop} onPress={stopTimer}>
-                        <Text style={styles.buttonIcon}>■</Text>
-                        <Text style={styles.buttonText}>PARAR</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
-
-            {/* Back Button */}
-            <TouchableOpacity
-                style={styles.buttonBack}
-                onPress={() => {
-                    
-                    navigation.goBack();
-                    
-                }}>
-                <Text style={styles.buttonText}>← VOLTAR</Text>
-            </TouchableOpacity>
-
-            {/* Footer Decoration */}
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>━━━━━━━━━━━━━━━━</Text>
-            </View>
-        </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    scrollContainer: {
         flex: 1,
         backgroundColor: "#1a1a2e",
+    },
+    container: {
         padding: 16,
-        justifyContent: "center",
     },
 
     // Header
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
         borderWidth: 4,
         borderColor: "#3b82f6",
         padding: 20,
-        marginBottom: 24,
+        marginBottom: 16,
         alignItems: "center",
     },
     subjectIcon: {
@@ -460,6 +461,46 @@ const styles = StyleSheet.create({
         color: "#fff",
         textAlign: "center",
         lineHeight: 24,
+    },
+
+    // Description Card
+    descriptionCard: {
+        backgroundColor: "#16213e",
+        borderWidth: 4,
+        borderColor: "#10b981",
+        marginBottom: 16,
+        overflow: "hidden",
+    },
+    descriptionHeader: {
+        backgroundColor: "#0f3460",
+        padding: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    descriptionIcon: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 12,
+        color: "#10b981",
+    },
+    descriptionHeaderText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 10,
+        color: "#10b981",
+        flex: 1,
+    },
+    descriptionContentWrapper: {
+        height: 250, // ALTURA FIXA PARA GARANTIR O SCROLL
+    },
+    descriptionContent: {
+        padding: 16,
+    },
+    descriptionText: {
+        fontFamily: "PressStart2P-Regular",
+        fontSize: 8,
+        color: "#e0e0e0",
+        lineHeight: 16,
+        paddingBottom: 16,
     },
 
     // Stats Panel
