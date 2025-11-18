@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthUtils } from "../utils/auth";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { api } from "../api";
-import { baseUrl } from "../api";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { baseURL } from "../api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "ShopScreen">;
 
@@ -138,7 +136,7 @@ export default function ShopScreen() {
                                 {/* Item Image */}
                                 <View style={styles.itemImageContainer}>
                                     <Image 
-                                        source={{ uri: `${baseUrl}${item.image_url}` }} 
+                                        source={{ uri: `${baseURL}${item.image_url}` }} 
                                         style={styles.itemImage} 
                                     />
                                     {item.purchased && (

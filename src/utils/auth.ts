@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
-import axios from "axios";
 import { api } from "../api";
 
 export class AuthUtils {

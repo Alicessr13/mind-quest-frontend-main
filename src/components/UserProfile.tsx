@@ -1,12 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
-import { View, Image, Text, Button, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from "react-native";
-import axios from "axios";
+import { useState, useCallback } from "react";
+import { View, Image, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from "react-native";
 import { AuthUtils } from "../utils/auth";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../App";
 import { api } from "../api";
-import { baseUrl } from "../api";
+import { baseURL } from "../api";
 import { SafeAreaView } from "react-native-safe-area-context";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
 
@@ -142,7 +141,7 @@ export default function UserProfile() {
                             {equippedItems.map((item: any, index: number) => (
                                 <Image
                                     key={`character-layer-${item.item_id}-${index}`}
-                                    source={{ uri: `${baseUrl}${item.image_url}` }}
+                                    source={{ uri: `${baseURL}${item.image_url}` }}
                                     style={styles.characterLayer}
                                 />
                             ))}
@@ -199,7 +198,7 @@ export default function UserProfile() {
                                 <View key={`inventory-${inv.inventory_id || item.item_id}-${index}`} style={styles.inventoryItem}>
                                     <View style={styles.itemImageContainer}>
                                         <Image
-                                            source={{ uri: `${baseUrl}${item.image_url}` }}
+                                            source={{ uri: `${baseURL}${item.image_url}` }}
                                             style={styles.itemImage}
                                         />
                                         {isEquipped && (
